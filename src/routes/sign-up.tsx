@@ -1,3 +1,4 @@
+import type { SubmitEvent } from "react"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { useForm } from '@tanstack/react-form'
 import { Button } from "@/components/ui/button"
@@ -8,6 +9,7 @@ import { PasswordInput } from "@/components/ui/password-input"
 import { SocialLoginButtons } from "@/components/ui/social-login-buttons"
 import { signUpSchema, type SignUpFormValues } from "@/schemas/sign-up.schema"
 import { useFormValidation } from "@/hooks/use-form-validation"
+import { submitForm } from "@/lib/utils"
 
 export const Route = createFileRoute("/sign-up")({ component: SignUp })
 
@@ -23,7 +25,7 @@ function SignUp() {
 
   return (
     <AuthLayout subtitle="Create your account">
-      <form className="mt-4 flex flex-col w-full">
+      <form className="mt-4 flex flex-col w-full" onSubmit={(e: SubmitEvent<HTMLFormElement>) => submitForm(e, form)}>
         <div>
           <form.Field
             name="email"

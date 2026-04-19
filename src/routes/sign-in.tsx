@@ -1,3 +1,4 @@
+import type { SubmitEvent } from "react"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { useForm } from '@tanstack/react-form'
 import { Button } from "@/components/ui/button"
@@ -9,6 +10,7 @@ import { RememberMeCheckbox } from "@/components/ui/remember-me-checkbox"
 import { SocialLoginButtons } from "@/components/ui/social-login-buttons"
 import { signInSchema, type SignInFormValues } from "@/schemas/sign-in.schema"
 import { useFormValidation } from "@/hooks/use-form-validation"
+import { submitForm } from "@/lib/utils"
 
 export const Route = createFileRoute("/sign-in")({ component: SignIn })
 
@@ -24,7 +26,7 @@ function SignIn() {
 
   return (
     <AuthLayout subtitle="Sign in to continue">
-      <form className="mt-4 flex flex-col w-full">
+      <form className="mt-4 flex flex-col w-full" onSubmit={(e: SubmitEvent<HTMLFormElement>) => submitForm(e, form)}>
         <div>
           <form.Field
             name="email"
