@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "@tanstack/react-router"
 import { Button } from "./button";
 
 export function Header() {
@@ -13,13 +14,13 @@ export function Header() {
     <header className="text-foreground">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
         <div className="flex items-center justify-between">
-          <a className="flex-shrink-0 text-2xl text-chart-3 font-bold hover:cursor-default" href="/">
+          <Link to="/" className="flex-shrink-0 text-2xl text-chart-3 font-bold hover:cursor-default">
             Momento
-          </a>
+          </Link>
 
-          <a className="hidden md:block" href="/sign-in">
+          <Link to="/sign-in" className="hidden md:block" >
             <Button className="text-lg p-4 cursor-pointer">Sign In</Button>
-          </a>
+          </Link>
 
           <div className="md:hidden flex items-center">
             <button className="focus:outline-none hover:cursor-pointer" onClick={handleMenuClick} aria-expanded={showMobileMenu}>
@@ -32,10 +33,10 @@ export function Header() {
 
         {showMobileMenu && (
           <nav className="md:hidden mt-5 space-y-4">
-            <a href="#" className="block text-lg hover:text-gray-300 transition-all">Home</a>
-            <a href="#services" className="block text-lg hover:text-gray-300 transition-all">Services</a>
-            <a href="#about" className="block text-lg hover:text-gray-300 transition-all">About Us</a>
-            <a href="#contact" className="block text-lg hover:text-gray-300 transition-all">Contact</a>
+            <Link to="/" className="block text-lg hover:text-gray-300 transition-all">Home</Link>
+            {/* <Link to="/services" className="block text-lg hover:text-gray-300 transition-all">Services</Link>
+            <Link to="/about" className="block text-lg hover:text-gray-300 transition-all">About Us</Link>
+            <Link to="/contact" className="block text-lg hover:text-gray-300 transition-all">Contact</Link> */}
           </nav>
         )}
       </div>

@@ -10,9 +10,9 @@ import { SocialLoginButtons } from "@/components/ui/social-login-buttons"
 import { signInSchema, type SignInFormValues } from "@/schemas/sign-in.schema"
 import { useFormValidation } from "@/hooks/use-form-validation"
 
-export const Route = createFileRoute("/sign-in")({ component: SignIn })
+export const Route = createFileRoute("/recover-password")({ component: App })
 
-function SignIn() {
+function App() {
   const form = useForm({
     defaultValues: { email: '', password: '', rememberMe: false } as SignInFormValues,
     onSubmit: async ({ value }) => {
@@ -78,4 +78,4 @@ function SignIn() {
   )
 }
 
-export default SignIn
+export default App
