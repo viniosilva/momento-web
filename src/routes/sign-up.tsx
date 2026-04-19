@@ -5,25 +5,24 @@ import { AuthDivider } from "@/components/ui/auth-divider"
 import { AuthLayout } from "@/components/ui/auth-layout"
 import { EmailInput } from "@/components/ui/email-input"
 import { PasswordInput } from "@/components/ui/password-input"
-import { RememberMeCheckbox } from "@/components/ui/remember-me-checkbox"
 import { SocialLoginButtons } from "@/components/ui/social-login-buttons"
-import { signInSchema, type SignInFormValues } from "@/schemas/sign-in.schema"
+import { signUpSchema, type SignUpFormValues } from "@/schemas/sign-up.schema"
 import { useFormValidation } from "@/hooks/use-form-validation"
 
-export const Route = createFileRoute("/sign-up")({ component: App })
+export const Route = createFileRoute("/sign-up")({ component: SignUp })
 
-function App() {
+function SignUp() {
   const form = useForm({
-    defaultValues: { email: '', password: '', rememberMe: false } as SignInFormValues,
+    defaultValues: { email: '', password: '' } as SignUpFormValues,
     onSubmit: async ({ value }) => {
       console.log(value)
     },
   })
 
-  const validateField = useFormValidation(signInSchema)
+  const validateField = useFormValidation(signUpSchema)
 
   return (
-    <AuthLayout subtitle="Sign in to continue">
+    <AuthLayout subtitle="Create your account">
       <form className="mt-4 flex flex-col w-full">
         <div>
           <form.Field
@@ -45,23 +44,11 @@ function App() {
           />
         </div>
 
-        <div className="flex items-center justify-between">
-          <form.Field
-            name="rememberMe"
-            validators={{
-              onChange: ({ value }) => validateField('rememberMe', value),
-            }}
-            children={(field) => <RememberMeCheckbox field={field} />}
-          />
-
-          <Link to="/recover-password" className="text-chart-5 hover:underline">Forgot password?</Link>
-        </div>
-
         <form.Subscribe
           selector={(state) => [state.canSubmit, state.isSubmitting]}
           children={([canSubmit, isSubmitting]) => (
             <Button type="submit" disabled={!canSubmit} className="mt-6 w-full font-semibold hover:bg-primary/80 cursor-pointer">
-              {isSubmitting ? '...' : 'Sign in'}
+              {isSubmitting ? '...' : 'Sign up'}
             </Button>
           )}
         />
@@ -72,10 +59,10 @@ function App() {
       <SocialLoginButtons />
 
       <p className="mt-4">
-        Don't have an account? <Link to="/sign-up" className="text-chart-5 hover:underline">Sign up</Link>
+        Already have an account? <Link to="/sign-in" className="text-chart-5 hover:underline">Sign in</Link>
       </p>
     </AuthLayout>
   )
 }
 
-export default App
+export default SignUp

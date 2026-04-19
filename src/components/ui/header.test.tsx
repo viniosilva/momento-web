@@ -1,11 +1,6 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { Header } from './header'
-import { Link } from '@tanstack/react-router'
-
-vi.mock('@tanstack/react-router', () => ({
-  Link: ({ children, ...props }: any) => <a {...props}>{children}</a>,
-}))
 
 describe('Header', () => {
   it('renders logo and sign in button on desktop', () => {
