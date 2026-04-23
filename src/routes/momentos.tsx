@@ -33,11 +33,11 @@ function Momentos() {
     console.log("SAVED:", { title: _title, content: _content })
   }
 
-  return (
-    <>
+return (
+    <div className="flex flex-col min-h-screen">
       <Header />
-      <main className="container mx-auto p-4 flex flex-col gap-8">
-        <div className="flex items-center justify-center">
+      <main className="flex-1 container mx-auto p-4 flex flex-col gap-8">
+      <div className="flex items-center justify-center">
           <input
             type="text"
             placeholder="Create an event..."
@@ -66,7 +66,7 @@ function Momentos() {
             {events.map((event) => (
               <Card
                 key={event.id}
-                className="w-[16rem] min-h-[16rem] max-h-[32rem] border border-chart-1 cursor-pointer"
+                className="w-[16rem] min-h-[16rem] max-h-[32rem]"
                 onClick={() => {
                   setTitle(event.title)
                   setContent(event.content)
@@ -94,7 +94,7 @@ function Momentos() {
         />
       </main>
       <Footer />
-    </>
+    </div>
   )
 }
 
