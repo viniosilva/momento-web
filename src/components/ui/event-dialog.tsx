@@ -103,18 +103,19 @@ function EventDialog({
             placeholder="Take a note..."
             className="w-full h-full resize-none bg-transparent text-sm focus:outline-none"
           />
+
+          <DialogFooter className="flex">
+            <Button
+              variant="outline"
+              className="w-min self-end"
+              onClick={() => {
+                onOpenChange?.(false)
+              }}
+            >
+              Close
+            </Button>
+          </DialogFooter>
         </div>
-        <DialogFooter className="flex">
-          <Button
-            variant="outline"
-            className="w-min self-end"
-            onClick={() => {
-              onOpenChange?.(false)
-            }}
-          >
-            Close
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog >
   )
