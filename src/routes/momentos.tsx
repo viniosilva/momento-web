@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router"
 import { CalendarHeart } from "lucide-react"
 import { Footer } from "@/components/ui/footer"
 import { Header } from "@/components/ui/header"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { EventDialog } from "@/components/ui/event-dialog"
 
 
@@ -12,6 +13,21 @@ function Momentos() {
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
+
+  const events = [
+    {
+      id: "1",
+      title: "Meeting with team",
+      content: "Discuss project updates and next steps",
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: "2",
+      title: "Lunch with client",
+      content: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting",
+      createdAt: new Date().toISOString(),
+    },
+  ]
 
   const handleSubmit = (_title: string, _content: string) => {
     console.log("SAVED:", { title: _title, content: _content })
@@ -33,15 +49,40 @@ function Momentos() {
             }}
             onClick={(e) => {
               e.preventDefault()
+              setTitle("")
+              setContent("")
               setOpen(true)
             }}
             autoFocus
           />
         </div>
-        <div className="flex flex-col items-center justify-center gap-2">
-          <CalendarHeart className="w-12 h-12 text-gray-400" />
-          <p className="text-center text-gray-500">Events created will be displayed here</p>
-        </div>
+        {!events.length ? (
+          <div className="flex flex-col items-center justify-center gap-2">
+            <CalendarHeart className="w-12 h-12 text-chart-1" />
+            <span className="text-center text-gray-500">Events created will be displayed here</span>
+          </div>
+        ) : (
+          <div className="flex flex-wrap items-start gap-4">
+            {events.map((event) => (
+              <Card
+                key={event.id}
+                className="w-[16rem] min-h-[16rem] max-h-[32rem] border border-chart-1 cursor-pointer"
+                onClick={() => {
+                  setTitle(event.title)
+                  setContent(event.content)
+                  setOpen(true)
+                }}
+              >
+                <CardHeader>
+                  <CardTitle>{event.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm line-clamp-22">{event.content}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
         <EventDialog
           open={open}
           onOpenChange={setOpen}
