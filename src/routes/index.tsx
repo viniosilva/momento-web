@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Header } from "@/components/ui/header"
+import { HeaderHome } from "@/components/ui/header-home"
 import { Footer } from "@/components/ui/footer"
 
 export const Route = createFileRoute("/")({ component: App })
@@ -9,7 +9,7 @@ export const Route = createFileRoute("/")({ component: App })
 function App() {
   return (
     <div className="flex flex-col min-h-screen bg-neutral-100">
-      <Header />
+      <HeaderHome />
       <main className="flex-1 flex items-center justify-center max-w-md min-w-0 mx-auto flex-col gap-4 text-sm leading-loose">
         <span className="bg-chart-1 py-2 px-4 text-center">Fast, simple, easy to organize and share your moments</span>
 

@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as RecoverPasswordRouteImport } from './routes/recover-password'
+import { Route as MomentosRouteImport } from './routes/momentos'
 import { Route as IndexRouteImport } from './routes/index'
 
 const SignUpRoute = SignUpRouteImport.update({
@@ -29,6 +30,11 @@ const RecoverPasswordRoute = RecoverPasswordRouteImport.update({
   path: '/recover-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MomentosRoute = MomentosRouteImport.update({
+  id: '/momentos',
+  path: '/momentos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -37,12 +43,14 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/momentos': typeof MomentosRoute
   '/recover-password': typeof RecoverPasswordRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/momentos': typeof MomentosRoute
   '/recover-password': typeof RecoverPasswordRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
@@ -50,20 +58,28 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/momentos': typeof MomentosRoute
   '/recover-password': typeof RecoverPasswordRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/recover-password' | '/sign-in' | '/sign-up'
+  fullPaths: '/' | '/momentos' | '/recover-password' | '/sign-in' | '/sign-up'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/recover-password' | '/sign-in' | '/sign-up'
-  id: '__root__' | '/' | '/recover-password' | '/sign-in' | '/sign-up'
+  to: '/' | '/momentos' | '/recover-password' | '/sign-in' | '/sign-up'
+  id:
+    | '__root__'
+    | '/'
+    | '/momentos'
+    | '/recover-password'
+    | '/sign-in'
+    | '/sign-up'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  MomentosRoute: typeof MomentosRoute
   RecoverPasswordRoute: typeof RecoverPasswordRoute
   SignInRoute: typeof SignInRoute
   SignUpRoute: typeof SignUpRoute
@@ -92,6 +108,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RecoverPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/momentos': {
+      id: '/momentos'
+      path: '/momentos'
+      fullPath: '/momentos'
+      preLoaderRoute: typeof MomentosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -104,6 +127,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  MomentosRoute: MomentosRoute,
   RecoverPasswordRoute: RecoverPasswordRoute,
   SignInRoute: SignInRoute,
   SignUpRoute: SignUpRoute,

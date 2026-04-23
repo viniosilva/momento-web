@@ -1,0 +1,94 @@
+import * as React from "react"
+
+import { Dialog, DialogContent, DialogFooter, DialogTrigger } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+
+interface EventDialogProps {
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  title?: string
+  content?: string
+  onTitleChange?: (title: string) => void
+  onContentChange?: (content: string) => void
+  onSave?: (title: string, content: string) => void
+  trigger?: React.ReactNode
+}
+
+function EventDialog({
+  open,
+  onOpenChange,
+  onTitleChange,
+  onContentChange,
+  onSave,
+  trigger,
+}: EventDialogProps) {
+  const [localTitle, setLocalTitle] = React.useState("")
+  const [localContent, setLocalContent] = React.useState("")
+  const [hasChanges, setHasChanges] = React.useState(false)
+  const prevOpen = React.useRef(open)
+
+  const isClosing = !open && prevOpen.current
+
+  React.useEffect(() => {
+    if (isClosing) {
+      if (hasChanges) {
+        onSave?.(localTitle, localContent)
+        setHasChanges(false)
+      }
+
+      setTimeout(() => {
+        setLocalTitle("")
+        setLocalContent("")
+      }, 250)
+    }
+
+    prevOpen.current = open
+  }, [open, isClosing])
+
+  React.useEffect(() => {
+    if (!open) return
+
+    const interval = setInterval(() => {
+      if (!hasChanges) return
+
+      onSave?.(localTitle, localContent)
+      setHasChanges(false)
+    }, 1500)
+
+    return () => clearInterval(interval)
+  }, [open, localTitle, localContent, onSave, hasChanges])
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {trigger && <DialogTrigger>{trigger}</DialogTrigger>}
+      <DialogContent>
+          <div className="flex flex-col gap-4">
+            <input
+              type="text"
+              value={localTitle}
+              onChange={(e) => {
+                setHasChanges(true)
+                setLocalTitle(e.target.value)
+                onTitleChange?.(e.target.value)
+              }}
+              placeholder="Title"
+              autoFocus
+              className="w-full bg-transparent font-heading text-sm font-medium focus:outline-none"
+            />
+            <textarea
+              value={localContent}
+              onChange={(e) => {
+                setHasChanges(true)
+                setLocalContent(e.target.value)
+                onContentChange?.(e.target.value)
+              }}
+              placeholder="Take a note..."
+              className="w-full h-full resize-none bg-transparent text-xs/relaxed focus:outline-none"
+            />
+          </div>
+        </DialogContent>
+    </Dialog>
+  )
+}
+
+export { EventDialog }

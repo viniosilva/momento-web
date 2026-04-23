@@ -1,5 +1,5 @@
 import type { SubmitEvent } from "react"
-import { createFileRoute, Link } from "@tanstack/react-router"
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router"
 import { useForm } from '@tanstack/react-form'
 import { Button } from "@/components/ui/button"
 import { AuthDivider } from "@/components/ui/auth-divider"
@@ -15,10 +15,12 @@ import { submitForm } from "@/lib/utils"
 export const Route = createFileRoute("/sign-in")({ component: SignIn })
 
 function SignIn() {
+  const router = useRouter()
   const form = useForm({
     defaultValues: { email: '', password: '', rememberMe: false } as SignInFormValues,
     onSubmit: async ({ value }) => {
       console.log(value)
+      router.navigate({ to: '/momentos' })
     },
   })
 
