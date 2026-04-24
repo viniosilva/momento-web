@@ -1,20 +1,24 @@
 import { useState } from "react"
 import { createFileRoute } from "@tanstack/react-router"
 import { CalendarHeart } from "lucide-react"
+import { type Event, eventSchema } from "@/schemas/event.schema"
 import { Footer } from "@/components/ui/footer"
 import { Header } from "@/components/ui/header"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { EventDialog } from "@/components/ui/event-dialog"
 
+const eventFormSchema = eventSchema.pick({ title: true, content: true })
+
 
 export const Route = createFileRoute("/momentos")({ component: Momentos })
 
 function Momentos() {
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
 
-  const events = [
+  const initialEvents: Array<Event> = [
     {
       id: "1",
       title: "Meeting with team",
@@ -29,15 +33,43 @@ function Momentos() {
     },
   ]
 
+  const [events, setEvents] = useState<Array<Event>>(initialEvents)
+
   const handleSubmit = (_title: string, _content: string) => {
-    console.log("SAVED:", { title: _title, content: _content })
+    const result = eventFormSchema.safeParse({ title: _title, content: _content })
+    if (!result.success) {
+      const errors = result.error.issues.map((issue) => issue.message).join(", ")
+      throw new Error(errors)
+    }
+
+    if (selectedEventId === null) {
+      const newEvent: Event = {
+        id: crypto.randomUUID(),
+        title: result.data.title,
+        content: result.data.content,
+        createdAt: new Date().toISOString(),
+      }
+      setEvents((prev) => [...prev, newEvent])
+    } else {
+      setEvents((prev) =>
+        prev.map((event) =>
+          event.id === selectedEventId
+            ? {
+              ...event,
+              title: result.data.title,
+              content: result.data.content,
+            }
+            : event
+        )
+      )
+    }
   }
 
-return (
+  return (
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-1 container mx-auto p-4 flex flex-col gap-8">
-      <div className="flex items-center justify-center">
+        <div className="flex items-center justify-center">
           <input
             type="text"
             placeholder="Create an event..."
@@ -49,6 +81,7 @@ return (
             }}
             onClick={(e) => {
               e.preventDefault()
+              setSelectedEventId(null)
               setTitle("")
               setContent("")
               setOpen(true)
@@ -68,6 +101,7 @@ return (
                 key={event.id}
                 className="w-[16rem] min-h-[16rem] max-h-[32rem]"
                 onClick={() => {
+                  setSelectedEventId(event.id)
                   setTitle(event.title)
                   setContent(event.content)
                   setOpen(true)
