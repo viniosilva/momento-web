@@ -1,11 +1,9 @@
-import { useCallback, useEffect, useState } from "react"
+import { useState } from "react"
 import { createFileRoute } from "@tanstack/react-router"
 import { CalendarHeart, Loader2 } from "lucide-react"
-import type { Event } from "@/schemas/event.schema"
 import { eventSchema } from "@/schemas/event.schema"
-import { api } from "@/api/api"
-import type { PortsEventResponse } from "@/api"
 import { useAuth } from "@/hooks/use-auth"
+import { useEventsList, useCreateEvent, useUpdateEvent } from "@/hooks/use-events"
 import { Footer } from "@/components/ui/footer"
 import { Header } from "@/components/ui/header"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -15,51 +13,18 @@ const eventFormSchema = eventSchema.pick({ title: true, content: true })
 
 export const Route = createFileRoute("/momentos")({ component: Momentos })
 
-function convertToEvent(apiResponse: PortsEventResponse): Event {
-  const id: string = apiResponse.id ?? ""
-  const title: string = apiResponse.title ?? ""
-  const content: string = apiResponse.content ?? ""
-  const createdAt: string = apiResponse.created_at ?? ""
-  return {
-    id,
-    title,
-    content,
-    createdAt,
-  }
-}
-
 function Momentos() {
   const { isAuthenticated } = useAuth()
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
-  const [events, setEvents] = useState<Array<Event>>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
-  const fetchEvents = useCallback(async () => {
-    try {
-      setIsLoading(true)
-      setError(null)
-      const response = await api.events.eventsList()
-      const data = response.data
-      const eventsList = (data.data ?? []).map(convertToEvent)
-      setEvents(eventsList)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch events")
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
+  const { data: eventsData, isLoading, error } = useEventsList()
+  const createEvent = useCreateEvent()
+  const updateEvent = useUpdateEvent()
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchEvents()
-    } else {
-      setIsLoading(false)
-    }
-  }, [isAuthenticated, fetchEvents])
+  const events = eventsData?.data ?? []
 
   const handleSubmit = async (_title: string, _content: string) => {
     const result = eventFormSchema.safeParse({ title: _title, content: _content })
@@ -70,17 +35,19 @@ function Momentos() {
 
     try {
       if (selectedEventId === null) {
-        await api.events.eventsCreate({
+        await createEvent.mutateAsync({
           title: result.data.title,
           content: result.data.content,
         })
       } else {
-        await api.events.eventsPartialUpdate(selectedEventId, {
-          title: result.data.title,
-          content: result.data.content,
+        await updateEvent.mutateAsync({
+          id: selectedEventId,
+          request: {
+            title: result.data.title,
+            content: result.data.content,
+          },
         })
       }
-      await fetchEvents()
     } catch (err) {
       throw new Error(err instanceof Error ? err.message : "Failed to save event")
     }
@@ -134,7 +101,7 @@ function Momentos() {
           </div>
         ) : error ? (
           <div className="flex flex-col items-center justify-center gap-2">
-            <span className="text-center text-red-500">{error}</span>
+            <span className="text-center text-red-500">{error.message}</span>
           </div>
         ) : !events.length ? (
           <div className="flex flex-col items-center justify-center gap-2">

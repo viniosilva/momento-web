@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useState, useEffect } from "react"
 import type { ReactNode } from "react"
-import { api } from "../api/api"
 import type { PortsLoginRequest, PortsRegisterRequest } from "../api"
+import { useLogin, useRegister, useLogout } from "./use-auth-query"
 
 interface AuthState {
   token: string | null
@@ -44,29 +44,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
+  const loginMutation = useLogin()
+
   const login = useCallback(async (credentials: PortsLoginRequest) => {
-    const response = await api.auth.authLoginCreate(credentials)
-    const { token, refresh_token } = response.data
+    const response = await loginMutation.mutateAsync(credentials)
+    const { token, refresh_token } = response
     if (!token || !refresh_token) {
       throw new Error("Invalid response from server")
     }
     setTokens(token, refresh_token)
-  }, [setTokens])
+  }, [loginMutation, setTokens])
+
+  const registerMutation = useRegister()
 
   const register = useCallback(async (data: PortsRegisterRequest) => {
-    await api.auth.authRegisterCreate(data)
-  }, [])
+    await registerMutation.mutateAsync(data)
+  }, [registerMutation])
+
+  const logoutMutation = useLogout()
 
   const logout = useCallback(async () => {
-    if (isClient) {
-      const refreshToken = localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN)
-      if (refreshToken) {
-        try {
-          await api.auth.authLogoutCreate({ refresh_token: refreshToken })
-        } catch {
-          // ignore logout errors
-        }
+    const refreshToken = isClient ? localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN) : null
+    if (refreshToken) {
+      try {
+        await logoutMutation.mutateAsync({ refresh_token: refreshToken })
+      } catch {
+        // ignore logout errors
       }
+    }
+    if (isClient) {
       localStorage.removeItem(STORAGE_KEYS.TOKEN)
       localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN)
     }
@@ -75,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refreshToken: null,
       isAuthenticated: false,
     })
-  }, [])
+  }, [logoutMutation])
 
   useEffect(() => {
     if (!isClient) return
