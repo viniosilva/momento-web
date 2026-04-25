@@ -259,6 +259,82 @@ export class HttpClient<SecurityDataType = unknown> {
       }
 
       if (!response.ok) {
+        // Try to refresh token on 401 (except for auth endpoints)
+        if (response.status === 401 && !path.includes("/auth/")) {
+          try {
+            const refreshToken = localStorage.getItem("momento_refresh_token");
+            if (refreshToken) {
+              // Make refresh request
+              const refreshResponse = await this.customFetch(
+                `${baseUrl || this.baseUrl || ""}/api/auth/refresh`,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ refresh_token: refreshToken }),
+                },
+              ).then((r) => r.json());
+
+              if (refreshResponse.token && refreshResponse.refresh_token) {
+                // Save new tokens
+                localStorage.setItem("momento_token", refreshResponse.token);
+                localStorage.setItem(
+                  "momento_refresh_token",
+                  refreshResponse.refresh_token,
+                );
+
+                // Retry original request with new token
+                const retryResponse = await this.customFetch(
+                  `${baseUrl || this.baseUrl || ""}${path}${
+                    queryString ? `?${queryString}` : ""
+                  }`,
+                  {
+                    ...requestParams,
+                    headers: {
+                      ...requestParams.headers,
+                      Authorization: `Bearer ${refreshResponse.token}`,
+                    },
+                  },
+                );
+
+                // Return retry response
+                return this.customFetch(retryResponse.url, {
+                  ...requestParams,
+                  headers: {
+                    ...requestParams.headers,
+                    Authorization: `Bearer ${refreshResponse.token}`,
+                  },
+                }).then(async (response) => {
+                  const r = response as HttpResponse<T, E>;
+                  r.data = null as unknown as T;
+                  r.error = null as unknown as E;
+
+                  const data = !responseFormat
+                    ? r
+                    : await response.clone()[responseFormat]().then((data) => {
+                        if (r.ok) {
+                          r.data = data;
+                        } else {
+                          r.error = data;
+                        }
+                        return r;
+                      });
+
+                  if (cancelToken) {
+                    this.abortControllers.delete(cancelToken);
+                  }
+
+                  return data;
+                });
+              }
+            }
+          } catch (refreshError) {
+            // Refresh failed (token expired), logout user
+            localStorage.removeItem("momento_token");
+            localStorage.removeItem("momento_refresh_token");
+            window.dispatchEvent(new Event("auth:logout"));
+          }
+        }
+
         const errorData = data as unknown as { error?: ApiError };
         const errorMessage = capitalizeFirstLetter(
           errorData?.error?.message || "Request failed",

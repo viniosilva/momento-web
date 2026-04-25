@@ -137,7 +137,7 @@ function Momentos() {
             <span className="text-center text-red-500">{error}</span>
           </div>
         ) : !events.length ? (
-          <div className="flex-1 flex flex-col items-center justify-center gap-2">
+          <div className="flex flex-col items-center justify-center gap-2">
             <CalendarHeart className="w-12 h-12 text-chart-1" />
             <span className="text-center text-gray-500">
               Events created will be displayed here

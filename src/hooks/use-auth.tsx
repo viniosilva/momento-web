@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useState } from "react"
+import { createContext, useCallback, useContext, useState, useEffect } from "react"
 import type { ReactNode } from "react"
 import { api } from "../api/api"
 import type { PortsLoginRequest, PortsRegisterRequest } from "../api"
@@ -75,6 +75,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refreshToken: null,
       isAuthenticated: false,
     })
+  }, [])
+
+  useEffect(() => {
+    if (!isClient) return
+
+    const handleLogout = () => {
+      setState({
+        token: null,
+        refreshToken: null,
+        isAuthenticated: false,
+      })
+    }
+
+    window.addEventListener("auth:logout", handleLogout)
+    return () => window.removeEventListener("auth:logout", handleLogout)
   }, [])
 
   return (
