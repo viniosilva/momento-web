@@ -1,6 +1,7 @@
-import type { SubmitEvent } from "react"
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router"
+import { Link, createFileRoute, useRouter } from "@tanstack/react-router"
 import { useForm } from '@tanstack/react-form'
+import type { SubmitEvent } from "react"
+import type { SignInFormValues } from "@/schemas/sign-in.schema"
 import { Button } from "@/components/ui/button"
 import { AuthDivider } from "@/components/ui/auth-divider"
 import { AuthLayout } from "@/components/ui/auth-layout"
@@ -8,19 +9,25 @@ import { EmailInput } from "@/components/ui/email-input"
 import { PasswordInput } from "@/components/ui/password-input"
 import { RememberMeCheckbox } from "@/components/ui/remember-me-checkbox"
 import { SocialLoginButtons } from "@/components/ui/social-login-buttons"
-import { signInSchema, type SignInFormValues } from "@/schemas/sign-in.schema"
+import { signInSchema } from "@/schemas/sign-in.schema"
 import { useFormValidation } from "@/hooks/use-form-validation"
 import { submitForm } from "@/lib/utils"
+import { useAuth } from "@/hooks/use-auth"
 
 export const Route = createFileRoute("/sign-in")({ component: SignIn })
 
 function SignIn() {
   const router = useRouter()
+  const { login } = useAuth()
   const form = useForm({
     defaultValues: { email: '', password: '', rememberMe: false } as SignInFormValues,
     onSubmit: async ({ value }) => {
-      console.log(value)
-      router.navigate({ to: '/momentos' })
+      try {
+        await login({ email: value.email, password: value.password })
+        router.navigate({ to: '/momentos' })
+      } catch (error) {
+        console.error('Login failed:', error)
+      }
     },
   })
 

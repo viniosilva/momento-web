@@ -9,5 +9,4 @@ export function cn(...inputs: ClassValue[]) {
 export function submitForm(e: SubmitEvent, form: any) {
   e.preventDefault();
   form.handleSubmit();
-  form.reset();
 }

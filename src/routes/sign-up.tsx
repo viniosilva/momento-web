@@ -1,23 +1,32 @@
-import type { SubmitEvent } from "react"
-import { createFileRoute, Link } from "@tanstack/react-router"
+import { Link, createFileRoute, useRouter } from "@tanstack/react-router"
 import { useForm } from '@tanstack/react-form'
+import type { SubmitEvent } from "react"
+import type { SignUpFormValues } from "@/schemas/sign-up.schema"
 import { Button } from "@/components/ui/button"
 import { AuthDivider } from "@/components/ui/auth-divider"
 import { AuthLayout } from "@/components/ui/auth-layout"
 import { EmailInput } from "@/components/ui/email-input"
 import { PasswordInput } from "@/components/ui/password-input"
 import { SocialLoginButtons } from "@/components/ui/social-login-buttons"
-import { signUpSchema, type SignUpFormValues } from "@/schemas/sign-up.schema"
+import { signUpSchema } from "@/schemas/sign-up.schema"
 import { useFormValidation } from "@/hooks/use-form-validation"
 import { submitForm } from "@/lib/utils"
+import { useAuth } from "@/hooks/use-auth"
 
 export const Route = createFileRoute("/sign-up")({ component: SignUp })
 
 function SignUp() {
+  const router = useRouter()
+  const { register } = useAuth()
   const form = useForm({
     defaultValues: { email: '', password: '' } as SignUpFormValues,
     onSubmit: async ({ value }) => {
-      console.log(value)
+      try {
+        await register({ email: value.email, password: value.password })
+        router.navigate({ to: '/sign-in' })
+      } catch (error) {
+        console.error('Registration failed:', error)
+      }
     },
   })
 

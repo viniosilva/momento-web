@@ -1,7 +1,11 @@
-import { useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { createFileRoute } from "@tanstack/react-router"
-import { CalendarHeart } from "lucide-react"
-import { type Event, eventSchema } from "@/schemas/event.schema"
+import { CalendarHeart, Loader2 } from "lucide-react"
+import type { Event } from "@/schemas/event.schema"
+import { eventSchema } from "@/schemas/event.schema"
+import { api } from "@/api/api"
+import type { PortsEventResponse } from "@/api"
+import { useAuth } from "@/hooks/use-auth"
 import { Footer } from "@/components/ui/footer"
 import { Header } from "@/components/ui/header"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,60 +13,94 @@ import { EventDialog } from "@/components/ui/event-dialog"
 
 const eventFormSchema = eventSchema.pick({ title: true, content: true })
 
-
 export const Route = createFileRoute("/momentos")({ component: Momentos })
 
+function convertToEvent(apiResponse: PortsEventResponse): Event {
+  const id: string = apiResponse.id ?? ""
+  const title: string = apiResponse.title ?? ""
+  const content: string = apiResponse.content ?? ""
+  const createdAt: string = apiResponse.created_at ?? ""
+  return {
+    id,
+    title,
+    content,
+    createdAt,
+  }
+}
+
 function Momentos() {
+  const { isAuthenticated } = useAuth()
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
+  const [events, setEvents] = useState<Array<Event>>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const initialEvents: Array<Event> = [
-    {
-      id: "1",
-      title: "Meeting with team",
-      content: "Discuss project updates and next steps",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "2",
-      title: "Lunch with client",
-      content: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting",
-      createdAt: new Date().toISOString(),
-    },
-  ]
+  const fetchEvents = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      setError(null)
+      const response = await api.events.eventsList()
+      const data = response.data
+      const eventsList = (data.data ?? []).map(convertToEvent)
+      setEvents(eventsList)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch events")
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
 
-  const [events, setEvents] = useState<Array<Event>>(initialEvents)
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchEvents()
+    } else {
+      setIsLoading(false)
+    }
+  }, [isAuthenticated, fetchEvents])
 
-  const handleSubmit = (_title: string, _content: string) => {
+  const handleSubmit = async (_title: string, _content: string) => {
     const result = eventFormSchema.safeParse({ title: _title, content: _content })
     if (!result.success) {
       const errors = result.error.issues.map((issue) => issue.message).join(", ")
       throw new Error(errors)
     }
 
-    if (selectedEventId === null) {
-      const newEvent: Event = {
-        id: crypto.randomUUID(),
-        title: result.data.title,
-        content: result.data.content,
-        createdAt: new Date().toISOString(),
+    try {
+      if (selectedEventId === null) {
+        await api.events.eventsCreate({
+          title: result.data.title,
+          content: result.data.content,
+        })
+      } else {
+        await api.events.eventsPartialUpdate(selectedEventId, {
+          title: result.data.title,
+          content: result.data.content,
+        })
       }
-      setEvents((prev) => [...prev, newEvent])
-    } else {
-      setEvents((prev) =>
-        prev.map((event) =>
-          event.id === selectedEventId
-            ? {
-              ...event,
-              title: result.data.title,
-              content: result.data.content,
-            }
-            : event
-        )
-      )
+      await fetchEvents()
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : "Failed to save event")
     }
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-1 container mx-auto p-4 flex flex-col gap-8">
+          <div className="flex flex-col items-center justify-center gap-4 mt-8">
+            <CalendarHeart className="w-12 h-12 text-chart-1" />
+            <span className="text-center text-gray-500">
+              Please log in to view your momentos
+            </span>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    )
   }
 
   return (
@@ -89,10 +127,21 @@ function Momentos() {
             autoFocus
           />
         </div>
-        {!events.length ? (
+        {isLoading ? (
           <div className="flex flex-col items-center justify-center gap-2">
+            <Loader2 className="w-8 h-8 animate-spin text-chart-1" />
+            <span className="text-center text-gray-500">Loading momentos...</span>
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center gap-2">
+            <span className="text-center text-red-500">{error}</span>
+          </div>
+        ) : !events.length ? (
+          <div className="flex-1 flex flex-col items-center justify-center gap-2">
             <CalendarHeart className="w-12 h-12 text-chart-1" />
-            <span className="text-center text-gray-500">Events created will be displayed here</span>
+            <span className="text-center text-gray-500">
+              Events created will be displayed here
+            </span>
           </div>
         ) : (
           <div className="flex flex-wrap items-start gap-4">

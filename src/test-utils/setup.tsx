@@ -15,3 +15,17 @@ export const setupReactRouterMock = () => {
     }),
   }))
 }
+
+export const setupAuthMock = () => {
+  vi.mock('@/hooks/use-auth', () => ({
+    useAuth: () => ({
+      login: vi.fn(),
+      register: vi.fn(),
+      logout: vi.fn(),
+      isAuthenticated: false,
+      token: null,
+      refreshToken: null,
+    }),
+    AuthProvider: ({ children }: { children: ReactNode }) => children,
+  }))
+}

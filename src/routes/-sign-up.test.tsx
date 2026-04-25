@@ -1,6 +1,11 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import SignUp from './sign-up'
+import { setupAuthMock } from '@/test-utils/setup'
+
+beforeEach(() => {
+  setupAuthMock()
+})
 
 describe('SignUp', () => {
   it('renders sign up page', () => {

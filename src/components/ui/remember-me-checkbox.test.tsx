@@ -2,7 +2,6 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { RememberMeCheckbox } from './remember-me-checkbox'
 import type { AnyFieldApi } from '@tanstack/react-form'
-import type { InputHTMLAttributes } from 'react'
 
 const mockField = {
   name: 'rememberMe',
