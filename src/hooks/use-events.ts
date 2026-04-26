@@ -1,6 +1,8 @@
+import { toast } from 'sonner'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { PortsCreateEventRequest, PortsEventResponse, PortsUpdateEventRequest } from '@/api'
 import { api } from '@/api/api'
+import { showApiError } from '@/lib/toast'
 
 const EVENT_QUERY_KEY = ['events']
 
@@ -11,9 +13,10 @@ function normalizeEvent(raw: PortsEventResponse | undefined): Event | null {
     id: raw.id ?? '',
     title: raw.title ?? '',
     content: raw.content ?? '',
-    userId: raw.user_id ?? '',
+    ownerUserId: raw.owner_user_id ?? '',
     createdAt: raw.created_at ?? '',
     updatedAt: raw.updated_at ?? '',
+    archivedAt: raw.archived_at ?? '',
   }
 }
 
@@ -21,9 +24,10 @@ export interface Event {
   id: string
   title: string
   content: string
-  userId: string
+  ownerUserId: string
   createdAt: string
   updatedAt: string
+  archivedAt: string
 }
 
 export interface EventsListParams {
@@ -111,9 +115,36 @@ export function useArchiveEvent() {
       const response = await api.events.eventsArchivePartialUpdate(id)
       return normalizeEvent(response.data)
     },
-    onSuccess: (_, id) => {
+    onMutate: async (id: string) => {
+      // Cancel ongoing queries to avoid overwrite
+      await queryClient.cancelQueries({ queryKey: EVENT_QUERY_KEY })
+
+      // Snapshot previous value for rollback
+      const previousEvents = queryClient.getQueryData([...EVENT_QUERY_KEY])
+
+      // Optimistically remove event from cache
+      queryClient.setQueryData<{ data: Event[] }>(EVENT_QUERY_KEY, (old) => {
+        if (!old) return old
+        return {
+          ...old,
+          data: old.data.filter((event) => event.id !== id),
+        }
+      })
+
+      return { previousEvents }
+    },
+    onError: (_err, _id, context) => {
+      // Rollback on error with toast
+      if (context?.previousEvents) {
+        queryClient.setQueryData([...EVENT_QUERY_KEY], context.previousEvents)
+      }
+      showApiError(_err)
+      toast.error('Failed to archive event')
+    },
+    onSuccess: () => {
+      // Invalidate on success with toast
       queryClient.invalidateQueries({ queryKey: EVENT_QUERY_KEY })
-      queryClient.invalidateQueries({ queryKey: [...EVENT_QUERY_KEY, id] })
+      toast.success('Event archived')
     },
   })
 }
@@ -126,9 +157,36 @@ export function useRestoreEvent() {
       const response = await api.events.eventsRestorePartialUpdate(id)
       return normalizeEvent(response.data)
     },
-    onSuccess: (_, id) => {
+    onMutate: async (id: string) => {
+      // Cancel ongoing queries to avoid overwrite
+      await queryClient.cancelQueries({ queryKey: EVENT_QUERY_KEY })
+
+      // Snapshot previous value for rollback
+      const previousEvents = queryClient.getQueryData([...EVENT_QUERY_KEY])
+
+      // Optimistically remove event from cache (archived events don't show in active list)
+      queryClient.setQueryData<{ data: Event[] }>(EVENT_QUERY_KEY, (old) => {
+        if (!old) return old
+        return {
+          ...old,
+          data: old.data.filter((event) => event.id !== id),
+        }
+      })
+
+      return { previousEvents }
+    },
+    onError: (_err, _id, context) => {
+      // Rollback on error with toast
+      if (context?.previousEvents) {
+        queryClient.setQueryData([...EVENT_QUERY_KEY], context.previousEvents)
+      }
+      showApiError(_err)
+      toast.error('Failed to restore event')
+    },
+    onSuccess: () => {
+      // Invalidate on success with toast
       queryClient.invalidateQueries({ queryKey: EVENT_QUERY_KEY })
-      queryClient.invalidateQueries({ queryKey: [...EVENT_QUERY_KEY, id] })
+      toast.success('Event restored')
     },
   })
 }

@@ -1,3 +1,14 @@
+/* eslint-disable */
+/* tslint:disable */
+// @ts-nocheck
+/*
+ * ---------------------------------------------------------------
+ * ## THIS FILE WAS GENERATED VIA SWAGGER-TYPESCRIPT-API        ##
+ * ##                                                           ##
+ * ## AUTHOR: acacode                                           ##
+ * ## SOURCE: https://github.com/acacode/swagger-typescript-api ##
+ * ---------------------------------------------------------------
+ */
 
 export enum DomainHealthStatusEnum {
   HealthStatusValueOk = "ok",
@@ -34,12 +45,14 @@ export interface PortsEventResponse {
   created_at?: string;
   /** @example "507f1f77bcf86cd799439011" */
   id?: string;
+  /** @example "507f1f77bcf86cd799439011" */
+  owner_user_id?: string;
   /** @example "My event title" */
   title?: string;
   /** @example "2026-02-08T10:30:00Z" */
   updated_at?: string;
-  /** @example "507f1f77bcf86cd799439011" */
-  user_id?: string;
+  /** @example "2026-02-08T10:30:00Z" */
+  archived_at?: string;
 }
 
 export interface PortsListEventsResponse {

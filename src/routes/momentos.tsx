@@ -3,11 +3,14 @@ import { createFileRoute } from "@tanstack/react-router"
 import { CalendarHeart, Loader2 } from "lucide-react"
 import { eventSchema } from "@/schemas/event.schema"
 import { useAuth } from "@/hooks/use-auth"
-import { useEventsList, useCreateEvent, useUpdateEvent } from "@/hooks/use-events"
+import { useCurrentUserId } from "@/hooks/use-current-user"
+import { useArchiveEvent, useCreateEvent, useEventsList, useRestoreEvent, useUpdateEvent } from "@/hooks/use-events"
 import { Footer } from "@/components/ui/footer"
 import { Header } from "@/components/ui/header"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { EventDialog } from "@/components/ui/event-dialog"
+import { EventCard } from "@/components/ui/event-card"
+import { EventCardMenu } from "@/components/ui/event-card-menu"
+import { ArchiveConfirmDialog } from "@/components/ui/archive-confirm-dialog"
 
 const eventFormSchema = eventSchema.pick({ title: true, content: true })
 
@@ -15,14 +18,19 @@ export const Route = createFileRoute("/momentos")({ component: Momentos })
 
 function Momentos() {
   const { isAuthenticated } = useAuth()
+  const currentUserId = useCurrentUserId()
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
+  const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false)
+  const [eventToArchive, setEventToArchive] = useState<string | null>(null)
 
   const { data: eventsData, isLoading, error } = useEventsList()
   const createEvent = useCreateEvent()
   const updateEvent = useUpdateEvent()
+  const archiveEvent = useArchiveEvent()
+  const restoreEvent = useRestoreEvent()
 
   const events = eventsData?.data ?? []
 
@@ -51,6 +59,25 @@ function Momentos() {
     } catch (err) {
       throw new Error(err instanceof Error ? err.message : "Failed to save event")
     }
+  }
+
+  const handleArchive = (id: string) => {
+    setEventToArchive(id)
+    setArchiveConfirmOpen(true)
+  }
+
+  const handleConfirmArchive = async () => {
+    if (!eventToArchive) return
+    try {
+      await archiveEvent.mutateAsync(eventToArchive)
+    } finally {
+      setEventToArchive(null)
+      setArchiveConfirmOpen(false)
+    }
+  }
+
+  const handleRestore = async (id: string) => {
+    await restoreEvent.mutateAsync(id)
   }
 
   if (!isAuthenticated) {
@@ -112,25 +139,36 @@ function Momentos() {
           </div>
         ) : (
           <div className="flex flex-wrap items-start gap-4">
-            {events.map((event) => (
-              <Card
-                key={event.id}
-                className="w-[16rem] min-h-[16rem] max-h-[32rem]"
-                onClick={() => {
-                  setSelectedEventId(event.id)
-                  setTitle(event.title)
-                  setContent(event.content)
-                  setOpen(true)
-                }}
-              >
-                <CardHeader>
-                  <CardTitle>{event.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm line-clamp-22">{event.content}</p>
-                </CardContent>
-              </Card>
-            ))}
+            {events.map((event) => {
+              const isOwner = event.ownerUserId === currentUserId
+              const isArchived = !!event.archivedAt
+              const isArchiving = archiveEvent.isPending && eventToArchive === event.id
+
+              return (
+                <EventCard
+                  key={event.id}
+                  title={event.title}
+                  content={event.content}
+                  isLoading={isArchiving}
+                  className="w-[16rem] min-h-[16rem] max-h-[32rem] transition-all duration-200 ease-in data-[removed]:scale-95 data-[removed]:opacity-0"
+                  onClick={() => {
+                    setSelectedEventId(event.id)
+                    setTitle(event.title)
+                    setContent(event.content)
+                    setOpen(true)
+                  }}
+                  menu={
+                    <EventCardMenu
+                      isOwner={isOwner}
+                      isArchived={isArchived}
+                      onArchive={() => handleArchive(event.id)}
+                      onRestore={() => handleRestore(event.id)}
+                      isLoading={isArchiving}
+                    />
+                  }
+                />
+              )
+            })}
           </div>
         )}
         <EventDialog
@@ -141,6 +179,11 @@ function Momentos() {
           onTitleChange={setTitle}
           onContentChange={setContent}
           onSave={handleSubmit}
+        />
+        <ArchiveConfirmDialog
+          open={archiveConfirmOpen}
+          onOpenChange={setArchiveConfirmOpen}
+          onConfirm={handleConfirmArchive}
         />
       </main>
       <Footer />

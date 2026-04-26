@@ -1,3 +1,14 @@
+/* eslint-disable */
+/* tslint:disable */
+// @ts-nocheck
+/*
+ * ---------------------------------------------------------------
+ * ## THIS FILE WAS GENERATED VIA SWAGGER-TYPESCRIPT-API        ##
+ * ##                                                           ##
+ * ## AUTHOR: acacode                                           ##
+ * ## SOURCE: https://github.com/acacode/swagger-typescript-api ##
+ * ---------------------------------------------------------------
+ */
 
 import type {
   NethttpErrorResponse,
@@ -5,9 +16,9 @@ import type {
   PortsEventResponse,
   PortsListEventsResponse,
   PortsUpdateEventRequest,
-} from "./data-contracts"
-import { ContentType, HttpClient } from "./http-client"
-import type { RequestParams } from "./http-client"
+} from "./data-contracts";
+import { ContentType, HttpClient } from "./http-client";
+import type { RequestParams } from "./http-client";
 
 export class Events<
   SecurityDataType = unknown,
