@@ -1,7 +1,7 @@
-import { createContext, useCallback, useContext, useState, useEffect } from "react"
+import { createContext, useCallback, useContext, useEffect, useState } from "react"
+import { useLogin, useLogout, useRegister } from "./use-auth-query"
 import type { ReactNode } from "react"
-import type { PortsLoginRequest, PortsRegisterRequest } from "../api"
-import { useLogin, useRegister, useLogout } from "./use-auth-query"
+import type { PortsLoginRequest, PortsRegisterRequest } from "@/api/Api"
 
 interface AuthState {
   token: string | null

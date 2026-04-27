@@ -1,7 +1,7 @@
 import React from "react"
 import { Eye, EyeOff } from "lucide-react"
-import type { AnyFieldApi } from '@tanstack/react-form'
 import { FieldError } from "./field-error"
+import type { AnyFieldApi } from '@tanstack/react-form'
 
 interface PasswordInputProps {
   field: AnyFieldApi

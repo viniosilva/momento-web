@@ -6,6 +6,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
+import type React from "react"
 
 interface EventCardMenuProps {
   isOwner: boolean
@@ -22,25 +23,28 @@ export function EventCardMenu({
   onRestore,
   isLoading,
 }: EventCardMenuProps) {
-  // Menu invisível para não-owner
   if (!isOwner) {
     return null
   }
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger>
+      <DropdownMenuTrigger onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+        e.stopPropagation()
+      }}>
         <Button
           variant="ghost"
           size="icon-sm"
-          className="absolute top-2 right-2 opacity-0 group-hover/event-card:opacity-100 transition-opacity"
+          className="hover:bg-transparent hover:text-chart-3"
           disabled={isLoading}
         >
           <MoreVertical className="h-4 w-4" />
           <span className="sr-only">Open menu</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" onClick={(e: React.MouseEvent<HTMLDivElement>) => {
+        e.stopPropagation()
+      }}>
         {isArchived ? (
           <DropdownMenuItem onClick={onRestore} disabled={isLoading}>
             <ArchiveRestore className="mr-2 h-4 w-4" />

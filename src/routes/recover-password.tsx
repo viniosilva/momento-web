@@ -1,6 +1,6 @@
-import type { SubmitEvent } from "react"
-import { createFileRoute, Link } from "@tanstack/react-router"
+import { Link, createFileRoute } from "@tanstack/react-router"
 import { useForm } from '@tanstack/react-form'
+import type { SubmitEvent } from "react"
 import { Button } from "@/components/ui/button"
 import { AuthLayout } from "@/components/ui/auth-layout"
 import { EmailInput } from "@/components/ui/email-input"

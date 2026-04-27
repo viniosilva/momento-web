@@ -1,34 +1,50 @@
 import * as React from "react"
 import { Loader2 } from "lucide-react"
-
+import type { Event } from "@/hooks/use-events"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { EventCardMenu } from "@/components/ui/event-card-menu"
+import { useCurrentUserId } from "@/hooks/use-current-user"
+
 
 interface EventCardProps extends React.ComponentProps<typeof Card> {
-  title: string
-  content?: string
+  event: Event
+  onArchive: () => void
+  onRestore: () => void
   isLoading?: boolean
-  menu?: React.ReactNode
+  className?: string
 }
 
 function EventCard({
-  title,
-  content,
-  className,
+  event,
+  onArchive,
+  onRestore,
   isLoading,
-  menu,
+  className,
   ...props
 }: EventCardProps) {
+  const currentUserId = useCurrentUserId()
+  const isOwner = event.ownerUserId === currentUserId
+  const isArchived = !!event.archivedAt
+
   return (
     <Card
       className={`group/event-card relative ${className ?? ''} ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}
       {...props}
     >
-      {menu}
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle>{event.title}</CardTitle>
+          <EventCardMenu
+            isOwner={isOwner}
+            isArchived={isArchived}
+            onArchive={onArchive}
+            onRestore={onRestore}
+            isLoading={isLoading}
+          />
+        </div>
       </CardHeader>
       <CardContent>
-        {content ?? <p>{content}</p>}
+        {event.content ?? <p>{event.content}</p>}
       </CardContent>
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/50">

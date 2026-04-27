@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { PasswordInput } from './password-input'
 import type { AnyFieldApi } from '@tanstack/react-form'
 

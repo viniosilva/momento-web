@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import type { z } from 'zod'
 
 export function useFormValidation(schema: z.ZodObject<any>) {
   return (fieldName: string, value: unknown) => {

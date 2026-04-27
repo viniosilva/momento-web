@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react'
 import { vi } from 'vitest'
+import type { ReactNode } from 'react'
 
 export const setupReactRouterMock = () => {
   vi.mock('@tanstack/react-router', () => ({

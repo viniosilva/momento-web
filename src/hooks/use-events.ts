@@ -1,7 +1,7 @@
 import { toast } from 'sonner'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { PortsCreateEventRequest, PortsEventResponse, PortsUpdateEventRequest } from '@/api'
-import { api } from '@/api/api'
+import { momentoApi } from '@/api/client'
 import { showApiError } from '@/lib/toast'
 
 const EVENT_QUERY_KEY = ['events']
@@ -37,11 +37,16 @@ export interface EventsListParams {
   sortOrder?: 'asc' | 'desc'
 }
 
+interface CachedEventsData {
+  queryKey: unknown[]
+  data: { data: Array<Event>; pagination?: unknown }
+}
+
 export function useEventsList(query?: EventsListParams) {
   return useQuery({
     queryKey: [...EVENT_QUERY_KEY, query],
     queryFn: async () => {
-      const response = await api.events.eventsList({
+      const response = await momentoApi.api.eventsList({
         page: query?.page,
         page_size: query?.pageSize,
         sort_by: query?.sortBy,
@@ -63,7 +68,7 @@ export function useEventDetail(id: string | undefined) {
     queryKey: [...EVENT_QUERY_KEY, id],
     queryFn: async () => {
       if (!id) return null
-      const response = await api.events.eventsDetail(id)
+      const response = await momentoApi.api.eventsDetail(id)
       return normalizeEvent(response.data)
     },
     enabled: !!id,
@@ -77,7 +82,7 @@ export function useCreateEvent() {
 
   return useMutation({
     mutationFn: async (request: PortsCreateEventRequest) => {
-      const response = await api.events.eventsCreate(request)
+      const response = await momentoApi.api.eventsCreate(request)
       return normalizeEvent(response.data)
     },
     onSuccess: () => {
@@ -97,7 +102,7 @@ export function useUpdateEvent() {
       id: string
       request: PortsUpdateEventRequest
     }) => {
-      const response = await api.events.eventsPartialUpdate(id, request)
+      const response = await momentoApi.api.eventsPartialUpdate(id, request)
       return normalizeEvent(response.data)
     },
     onSuccess: (_, { id }) => {
@@ -112,31 +117,49 @@ export function useArchiveEvent() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const response = await api.events.eventsArchivePartialUpdate(id)
+      const response = await momentoApi.api.eventsArchivePartialUpdate(id)
       return normalizeEvent(response.data)
     },
     onMutate: async (id: string) => {
+      // Find all event list queries that start with EVENT_QUERY_KEY
+      const eventListQueries = queryClient.getQueryCache().findAll({
+        queryKey: EVENT_QUERY_KEY,
+      })
+
       // Cancel ongoing queries to avoid overwrite
       await queryClient.cancelQueries({ queryKey: EVENT_QUERY_KEY })
 
-      // Snapshot previous value for rollback
-      const previousEvents = queryClient.getQueryData([...EVENT_QUERY_KEY])
+      // Snapshot previous values for rollback
+      const previousEventsMap = new Map<string, unknown>()
 
-      // Optimistically remove event from cache
-      queryClient.setQueryData<{ data: Event[] }>(EVENT_QUERY_KEY, (old) => {
-        if (!old) return old
-        return {
-          ...old,
-          data: old.data.filter((event) => event.id !== id),
+      eventListQueries.forEach((query) => {
+        const queryKey = query.queryKey
+        const previousData = queryClient.getQueryData(queryKey)
+        if (previousData) {
+          previousEventsMap.set(JSON.stringify(queryKey), {
+            queryKey,
+            data: previousData,
+          })
         }
+
+        // Optimistically remove event from cache
+        queryClient.setQueryData(queryKey, (old: { data: Array<Event> } | undefined) => {
+          if (!old?.data) return old
+          return {
+            ...old,
+            data: old.data.filter((event) => event.id !== id),
+          }
+        })
       })
 
-      return { previousEvents }
+      return { previousEventsMap }
     },
     onError: (_err, _id, context) => {
       // Rollback on error with toast
-      if (context?.previousEvents) {
-        queryClient.setQueryData([...EVENT_QUERY_KEY], context.previousEvents)
+      if (context?.previousEventsMap) {
+        context.previousEventsMap.forEach(({ queryKey, data }) => {
+          queryClient.setQueryData(queryKey, data)
+        })
       }
       showApiError(_err)
       toast.error('Failed to archive event')
@@ -154,35 +177,10 @@ export function useRestoreEvent() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const response = await api.events.eventsRestorePartialUpdate(id)
+      const response = await momentoApi.api.eventsRestorePartialUpdate(id)
       return normalizeEvent(response.data)
     },
-    onMutate: async (id: string) => {
-      // Cancel ongoing queries to avoid overwrite
-      await queryClient.cancelQueries({ queryKey: EVENT_QUERY_KEY })
 
-      // Snapshot previous value for rollback
-      const previousEvents = queryClient.getQueryData([...EVENT_QUERY_KEY])
-
-      // Optimistically remove event from cache (archived events don't show in active list)
-      queryClient.setQueryData<{ data: Event[] }>(EVENT_QUERY_KEY, (old) => {
-        if (!old) return old
-        return {
-          ...old,
-          data: old.data.filter((event) => event.id !== id),
-        }
-      })
-
-      return { previousEvents }
-    },
-    onError: (_err, _id, context) => {
-      // Rollback on error with toast
-      if (context?.previousEvents) {
-        queryClient.setQueryData([...EVENT_QUERY_KEY], context.previousEvents)
-      }
-      showApiError(_err)
-      toast.error('Failed to restore event')
-    },
     onSuccess: () => {
       // Invalidate on success with toast
       queryClient.invalidateQueries({ queryKey: EVENT_QUERY_KEY })
@@ -196,7 +194,7 @@ export function useDeleteEvent() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      await api.events.eventsDelete(id)
+      await momentoApi.api.eventsDelete(id)
       return id
     },
     onSuccess: (_, id) => {

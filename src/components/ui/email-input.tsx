@@ -1,5 +1,5 @@
-import type { AnyFieldApi } from '@tanstack/react-form'
 import { FieldError } from './field-error'
+import type { AnyFieldApi } from '@tanstack/react-form'
 
 interface EmailInputProps {
   field: AnyFieldApi

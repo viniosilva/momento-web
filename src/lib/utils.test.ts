@@ -1,6 +1,6 @@
-import type { SubmitEvent } from 'react'
-import { describe, it, expect, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { submitForm } from './utils'
+import type { SubmitEvent } from 'react'
 
 describe('submitForm', () => {
   it('prevents default form submission', () => {

@@ -1,124 +1,135 @@
 import * as React from "react"
 
+import type { Event } from "@/hooks/use-events"
+import { cn } from "@/lib/utils"
 import { Dialog, DialogContent, DialogFooter, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { EventCardMenu } from "@/components/ui/event-card-menu"
 
-interface EventDialogProps {
-  open?: boolean
-  onOpenChange?: (open: boolean) => void
-  title?: string
-  content?: string
-  onTitleChange?: (title: string) => void
-  onContentChange?: (content: string) => void
-  onSave?: (title: string, content: string) => void
+export interface EventDialogProps extends React.HTMLAttributes<HTMLDivElement> {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  event: Event | null
+  onSave?: (data: { title: string; content: string }) => void
+  onArchive?: (event: Event) => void
+  onRestore?: (event: Event) => void
+  isLoading?: boolean
+  isOwner?: boolean
   trigger?: React.ReactNode
 }
 
-function EventDialog({
-  open,
-  onOpenChange,
-  title,
-  content,
-  onTitleChange,
-  onContentChange,
-  onSave,
-  trigger,
-}: EventDialogProps) {
-  const [localTitle, setLocalTitle] = React.useState("")
-  const [localContent, setLocalContent] = React.useState("")
-  const [hasChanges, setHasChanges] = React.useState(false)
-  const prevOpen = React.useRef(open)
+export const EventDialog = React.forwardRef<HTMLDivElement, EventDialogProps>(
+  (
+    {
+      open,
+      onOpenChange,
+      event,
+      onSave,
+      onArchive,
+      onRestore,
+      isLoading,
+      isOwner,
+      trigger,
+      className,
+      ...props
+    },
+    ref
+  ) => {
+    const [title, setTitle] = React.useState(event?.title ?? "")
+    const [content, setContent] = React.useState(event?.content ?? "")
+    const [error, setError] = React.useState<string | null>(null)
 
-  const isClosing = !open && prevOpen.current
+    const prevOpen = React.useRef(false)
 
-  React.useEffect(() => {
-    if (open && title !== undefined) {
-      setLocalTitle(title)
-    }
-  }, [open, title])
-
-  React.useEffect(() => {
-    if (open && content !== undefined) {
-      setLocalContent(content)
-    }
-  }, [open, content])
-
-  React.useEffect(() => {
-    if (isClosing) {
-      if (hasChanges) {
-        onSave?.(localTitle, localContent)
-        setHasChanges(false)
+    React.useEffect(() => {
+      if (open && !prevOpen.current) {
+        setTitle(event?.title ?? "")
+        setContent(event?.content ?? "")
+        setError(null)
+      } else if (!open && prevOpen.current) {
+        setError(null)
+        onSave?.({ title: title.trim(), content: content.trim() })
       }
+      
+      prevOpen.current = open
+    }, [open, event])
 
-      setTimeout(() => {
-        setLocalTitle("")
-        setLocalContent("")
-      }, 250)
+    const handleSave = () => {
+      setError(null)
+      onSave?.({ title: title.trim(), content: content.trim() })
     }
 
-    prevOpen.current = open
-  }, [open, isClosing])
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (e.ctrlKey && e.key === "Enter") {
+        handleSave()
+      }
+    }
 
-  React.useEffect(() => {
-    if (!open) return
+    const handleArchive = React.useCallback(() => {
+      if (event?.id && onArchive) {
+        onArchive(event)
+      }
+    }, [event?.id, onArchive])
 
-    const interval = setInterval(() => {
-      if (!hasChanges) return
+    const handleRestore = React.useCallback(() => {
+      if (event?.id && onRestore) {
+        onRestore(event)
+      }
+    }, [event?.id, onRestore])
 
-      onSave?.(localTitle, localContent)
-      setHasChanges(false)
-    }, 1500)
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        {trigger && <DialogTrigger>{trigger}</DialogTrigger>}
+        <DialogContent
+          ref={ref}
+          showCloseButton={false}
+          className={cn(className)}
+          {...props}
+        >
+          <div className="flex flex-col gap-4" onKeyDown={handleKeyDown}>
+            <div className="flex items-center justify-between">
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Event title..."
+                className="flex-1 bg-transparent text-lg font-normal focus:outline-none"
+                aria-label="Event title"
+              />
+              <EventCardMenu
+                isOwner={isOwner ?? false}
+                isArchived={!!event?.archivedAt}
+                onArchive={handleArchive}
+                onRestore={handleRestore}
+                isLoading={isLoading}
+              />
+            </div>
+            <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Take a note..."
+              className="w-full h-full resize-none bg-transparent text-sm focus:outline-none"
+            />
 
-    return () => clearInterval(interval)
-  }, [open, localTitle, localContent, onSave, hasChanges])
+            {error && (
+              <p className="text-sm text-destructive">{error}</p>
+            )}
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      {trigger && <DialogTrigger>{trigger}</DialogTrigger>}
-      <DialogContent showCloseButton={false}>
-        <div className="flex flex-col gap-4" onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
-          if (e.ctrlKey && e.key === "Enter") {
-            onOpenChange?.(false)
-          }
-        }}>
-          <input
-            type="text"
-            value={localTitle}
-            onChange={(e) => {
-              setHasChanges(true)
-              setLocalTitle(e.target.value)
-              onTitleChange?.(e.target.value)
-            }}
-            placeholder="Title"
-            autoFocus
-            className="w-full bg-transparent font-heading text-sm font-medium focus:outline-none"
-          />
-          <textarea
-            value={localContent}
-            onChange={(e) => {
-              setHasChanges(true)
-              setLocalContent(e.target.value)
-              onContentChange?.(e.target.value)
-            }}
-            placeholder="Take a note..."
-            className="w-full h-full resize-none bg-transparent text-sm focus:outline-none"
-          />
+            <DialogFooter className="flex gap-2">
+              <Button
+                variant="outline"
+                className="w-min self-end"
+                onClick={() => onOpenChange(false)}
+                disabled={!title.trim() || isLoading}
+              >
+                Close
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+    )
+  }
+)
 
-          <DialogFooter className="flex">
-            <Button
-              variant="outline"
-              className="w-min self-end"
-              onClick={() => {
-                onOpenChange?.(false)
-              }}
-            >
-              Close
-            </Button>
-          </DialogFooter>
-        </div>
-      </DialogContent>
-    </Dialog >
-  )
-}
-
-export { EventDialog }
+EventDialog.displayName = "EventDialog"

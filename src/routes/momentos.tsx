@@ -1,6 +1,8 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { createFileRoute } from "@tanstack/react-router"
 import { CalendarHeart, Loader2 } from "lucide-react"
+import { toast } from "sonner"
+import type { Event } from "@/hooks/use-events"
 import { eventSchema } from "@/schemas/event.schema"
 import { useAuth } from "@/hooks/use-auth"
 import { useCurrentUserId } from "@/hooks/use-current-user"
@@ -9,7 +11,6 @@ import { Footer } from "@/components/ui/footer"
 import { Header } from "@/components/ui/header"
 import { EventDialog } from "@/components/ui/event-dialog"
 import { EventCard } from "@/components/ui/event-card"
-import { EventCardMenu } from "@/components/ui/event-card-menu"
 import { ArchiveConfirmDialog } from "@/components/ui/archive-confirm-dialog"
 
 const eventFormSchema = eventSchema.pick({ title: true, content: true })
@@ -18,11 +19,8 @@ export const Route = createFileRoute("/momentos")({ component: Momentos })
 
 function Momentos() {
   const { isAuthenticated } = useAuth()
-  const currentUserId = useCurrentUserId()
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
   const [open, setOpen] = useState(false)
-  const [title, setTitle] = useState("")
-  const [content, setContent] = useState("")
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false)
   const [eventToArchive, setEventToArchive] = useState<string | null>(null)
 
@@ -33,51 +31,71 @@ function Momentos() {
   const restoreEvent = useRestoreEvent()
 
   const events = eventsData?.data ?? []
+  const currentUserId = useCurrentUserId()
 
-  const handleSubmit = async (_title: string, _content: string) => {
-    const result = eventFormSchema.safeParse({ title: _title, content: _content })
+  const handleSave = async (data: { title: string; content: string }) => {
+    const result = eventFormSchema.safeParse(data)
     if (!result.success) {
       const errors = result.error.issues.map((issue) => issue.message).join(", ")
-      throw new Error(errors)
+      toast.error(errors)
+      return
     }
 
     try {
-      if (selectedEventId === null) {
+      const eventId = selectedEvent?.id ?? null
+      if (eventId === null) {
         await createEvent.mutateAsync({
           title: result.data.title,
           content: result.data.content,
         })
       } else {
-        await updateEvent.mutateAsync({
-          id: selectedEventId,
-          request: {
-            title: result.data.title,
-            content: result.data.content,
-          },
-        })
+        if (result.data.title !== selectedEvent?.title || result.data.content !== selectedEvent?.content) {
+          await updateEvent.mutateAsync({
+            id: eventId,
+            request: {
+              title: result.data.title,
+              content: result.data.content,
+            },
+          })
+          toast.success(eventId === null ? "Event created!" : "Event updated!")
+        }
       }
+      setOpen(false)      
     } catch (err) {
-      throw new Error(err instanceof Error ? err.message : "Failed to save event")
+      toast.error(err instanceof Error ? err.message : "Failed to save event")
     }
   }
 
-  const handleArchive = (id: string) => {
-    setEventToArchive(id)
+  const handleArchive = (event: Event) => {
+    setEventToArchive(event.id)
     setArchiveConfirmOpen(true)
   }
 
   const handleConfirmArchive = async () => {
-    if (!eventToArchive) return
+    if (!eventToArchive || selectedEvent?.id !== eventToArchive) return
     try {
       await archiveEvent.mutateAsync(eventToArchive)
+      selectedEvent.archivedAt = new Date().toISOString()
+      setSelectedEvent(selectedEvent)
+    } catch (err) {
+      // Error toast is handled by the mutation hook's onError
+      console.error('Archive failed:', err)
     } finally {
       setEventToArchive(null)
       setArchiveConfirmOpen(false)
     }
   }
 
-  const handleRestore = async (id: string) => {
-    await restoreEvent.mutateAsync(id)
+  const handleRestore = async (event: Event) => {
+    if (!event) return
+    try {
+      await restoreEvent.mutateAsync(event.id)
+      event.archivedAt = ""
+      setSelectedEvent({ ...event })
+    } catch (err) {
+      // Error toast is handled by the mutation hook's onError
+      console.error('Restore failed:', err)
+    }
   }
 
   if (!isAuthenticated) {
@@ -107,15 +125,13 @@ function Momentos() {
             placeholder="Create an event..."
             className="mt-1 w-1/2 px-3 py-2 border border-border focus:outline-chart-1 mb-4"
             onKeyDown={(e) => {
-              if (e.key.length === 1) {
+              if (e.key === "Enter") {
                 setOpen(true)
               }
             }}
             onClick={(e) => {
               e.preventDefault()
-              setSelectedEventId(null)
-              setTitle("")
-              setContent("")
+              setSelectedEvent(null)
               setOpen(true)
             }}
             autoFocus
@@ -140,32 +156,20 @@ function Momentos() {
         ) : (
           <div className="flex flex-wrap items-start gap-4">
             {events.map((event) => {
-              const isOwner = event.ownerUserId === currentUserId
-              const isArchived = !!event.archivedAt
               const isArchiving = archiveEvent.isPending && eventToArchive === event.id
 
               return (
                 <EventCard
                   key={event.id}
-                  title={event.title}
-                  content={event.content}
+                  event={event}
+                  onArchive={() => handleArchive(event)}
+                  onRestore={() => handleRestore(event)}
                   isLoading={isArchiving}
                   className="w-[16rem] min-h-[16rem] max-h-[32rem] transition-all duration-200 ease-in data-[removed]:scale-95 data-[removed]:opacity-0"
                   onClick={() => {
-                    setSelectedEventId(event.id)
-                    setTitle(event.title)
-                    setContent(event.content)
+                    setSelectedEvent(event)
                     setOpen(true)
                   }}
-                  menu={
-                    <EventCardMenu
-                      isOwner={isOwner}
-                      isArchived={isArchived}
-                      onArchive={() => handleArchive(event.id)}
-                      onRestore={() => handleRestore(event.id)}
-                      isLoading={isArchiving}
-                    />
-                  }
                 />
               )
             })}
@@ -173,12 +177,13 @@ function Momentos() {
         )}
         <EventDialog
           open={open}
+          event={selectedEvent}
           onOpenChange={setOpen}
-          title={title}
-          content={content}
-          onTitleChange={setTitle}
-          onContentChange={setContent}
-          onSave={handleSubmit}
+          onArchive={handleArchive}
+          onRestore={handleRestore}
+          onSave={handleSave}
+          isLoading={createEvent.isPending || updateEvent.isPending}
+          isOwner={selectedEvent?.ownerUserId === currentUserId}
         />
         <ArchiveConfirmDialog
           open={archiveConfirmOpen}
