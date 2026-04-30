@@ -31,3 +31,27 @@ Feature-based folder structure with shared components
 - Tailwind CSS v4 for styling (utility-first)
 - Vitest + Testing Library for tests
 - shadcn-like component pattern in `components/ui/`
+- **MUST create git worktree for new tasks** (isolation requirement)
+
+## Workflow for New Tasks (MANDATORY)
+**Before any implementation:**
+1. Read @.cursor/skills/start-feature.md
+2. Create isolated worktree: `git worktree add ../momento-web-feat-{name} -b feat/{name}`
+3. Work ONLY in the new worktree
+4. Never implement directly in main working directory
+
+**Failure to create worktree = violation of project workflow**
+**Failure to pass code review = incomplete implementation**
+
+## Code Review Workflow (MANDATORY)
+**Code is NOT ready until reviewer explicitly approves**
+
+After implementation in worktree:
+1. Run code review: use `reviewer` agent (or `/code-review` command)
+2. Address ALL feedback from reviewer
+3. Re-run review after fixes
+4. Repeat steps 1-3 until reviewer approves
+5. ONLY after explicit approval: code is ready for PR/merge
+
+**Never claim "implementation is complete" before reviewer approval**
+**Never skip review step - this is a hard requirement**
