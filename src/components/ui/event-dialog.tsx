@@ -13,6 +13,7 @@ export interface EventDialogProps extends React.HTMLAttributes<HTMLDivElement> {
   onSave?: (data: { title: string; content: string }) => void
   onArchive?: (event: Event) => void
   onRestore?: (event: Event) => void
+  onDelete?: (event: Event) => void
   isLoading?: boolean
   isOwner?: boolean
   trigger?: React.ReactNode
@@ -27,6 +28,7 @@ export const EventDialog = React.forwardRef<HTMLDivElement, EventDialogProps>(
       onSave,
       onArchive,
       onRestore,
+      onDelete,
       isLoading,
       isOwner,
       trigger,
@@ -77,6 +79,12 @@ export const EventDialog = React.forwardRef<HTMLDivElement, EventDialogProps>(
       }
     }, [event?.id, onRestore])
 
+    const handleDelete = React.useCallback(() => {
+      if (event?.id && onDelete) {
+        onDelete(event)
+      }
+    }, [event?.id, onDelete])
+
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         {trigger && <DialogTrigger>{trigger}</DialogTrigger>}
@@ -101,6 +109,7 @@ export const EventDialog = React.forwardRef<HTMLDivElement, EventDialogProps>(
                 isArchived={!!event?.archivedAt}
                 onArchive={handleArchive}
                 onRestore={handleRestore}
+                onDelete={onDelete ? handleDelete : undefined}
                 isLoading={isLoading}
               />
             </div>

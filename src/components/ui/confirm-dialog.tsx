@@ -9,21 +9,25 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
-interface ArchiveConfirmDialogProps {
+interface ConfirmDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onConfirm: () => void
   title?: string
   description?: string
+  confirmText?: string
+  cancelText?: string
 }
 
-export function ArchiveConfirmDialog({
+export function ConfirmDialog({
   open,
   onOpenChange,
   onConfirm,
-  title = "Archive event?",
-  description = "This event will be removed from your active list.",
-}: ArchiveConfirmDialogProps) {
+  title = "Confirm?",
+  description = "Are you sure?",
+  confirmText = "Confirm",
+  cancelText = "Cancel",
+}: ConfirmDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
@@ -32,8 +36,8 @@ export function ArchiveConfirmDialog({
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>Archive</AlertDialogAction>
+          <AlertDialogCancel>{cancelText}</AlertDialogCancel>
+          <AlertDialogAction onClick={onConfirm}>{confirmText}</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

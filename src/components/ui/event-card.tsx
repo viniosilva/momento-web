@@ -10,6 +10,7 @@ interface EventCardProps extends React.ComponentProps<typeof Card> {
   event: Event
   onArchive: () => void
   onRestore: () => void
+  onDelete?: () => void
   isLoading?: boolean
   className?: string
 }
@@ -18,6 +19,7 @@ function EventCard({
   event,
   onArchive,
   onRestore,
+  onDelete,
   isLoading,
   className,
   ...props
@@ -39,12 +41,13 @@ function EventCard({
             isArchived={isArchived}
             onArchive={onArchive}
             onRestore={onRestore}
+            onDelete={onDelete}
             isLoading={isLoading}
           />
         </div>
       </CardHeader>
       <CardContent>
-        {event.content ?? <p>{event.content}</p>}
+        <p>{event.content}</p>
       </CardContent>
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/50">

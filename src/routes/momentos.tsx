@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { createFileRoute } from "@tanstack/react-router"
 import { CalendarHeart, Loader2 } from "lucide-react"
 import { toast } from "sonner"
@@ -6,12 +6,12 @@ import type { Event } from "@/hooks/use-events"
 import { eventSchema } from "@/schemas/event.schema"
 import { useAuth } from "@/hooks/use-auth"
 import { useCurrentUserId } from "@/hooks/use-current-user"
-import { useArchiveEvent, useCreateEvent, useEventsList, useRestoreEvent, useUpdateEvent } from "@/hooks/use-events"
+import { useArchiveEvent, useCreateEvent, useDeleteEvent, useEventsList, useRestoreEvent, useUpdateEvent } from "@/hooks/use-events"
 import { Footer } from "@/components/ui/footer"
 import { Header } from "@/components/ui/header"
 import { EventDialog } from "@/components/ui/event-dialog"
 import { EventCard } from "@/components/ui/event-card"
-import { ArchiveConfirmDialog } from "@/components/ui/archive-confirm-dialog"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 
 const eventFormSchema = eventSchema.pick({ title: true, content: true })
 
@@ -23,12 +23,15 @@ function Momentos() {
   const [open, setOpen] = useState(false)
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false)
   const [eventToArchive, setEventToArchive] = useState<string | null>(null)
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [eventToDelete, setEventToDelete] = useState<string | null>(null)
 
   const { data: eventsData, isLoading, error } = useEventsList()
   const createEvent = useCreateEvent()
   const updateEvent = useUpdateEvent()
   const archiveEvent = useArchiveEvent()
   const restoreEvent = useRestoreEvent()
+  const deleteEvent = useDeleteEvent()
 
   const events = eventsData?.data ?? []
   const currentUserId = useCurrentUserId()
@@ -42,22 +45,23 @@ function Momentos() {
     }
 
     try {
-      const eventId = selectedEvent?.id ?? null
-      if (eventId === null) {
+      if (!selectedEvent) {
+        // Creating new event
         await createEvent.mutateAsync({
           title: result.data.title,
           content: result.data.content,
         })
       } else {
-        if (result.data.title !== selectedEvent?.title || result.data.content !== selectedEvent?.content) {
+        // Updating existing event
+        if (result.data.title !== selectedEvent.title || result.data.content !== selectedEvent.content) {
           await updateEvent.mutateAsync({
-            id: eventId,
+            id: selectedEvent.id,
             request: {
               title: result.data.title,
               content: result.data.content,
             },
           })
-          toast.success(eventId === null ? "Event created!" : "Event updated!")
+          toast.success("Event updated!")
         }
       }
       setOpen(false)      
@@ -87,7 +91,6 @@ function Momentos() {
   }
 
   const handleRestore = async (event: Event) => {
-    if (!event) return
     try {
       await restoreEvent.mutateAsync(event.id)
       event.archivedAt = ""
@@ -95,6 +98,25 @@ function Momentos() {
     } catch (err) {
       // Error toast is handled by the mutation hook's onError
       console.error('Restore failed:', err)
+    }
+  }
+
+  const handleDelete = (event: Event) => {
+    setEventToDelete(event.id)
+    setDeleteConfirmOpen(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!eventToDelete) return
+    try {
+      await deleteEvent.mutateAsync(eventToDelete)
+    } catch (err) {
+      // Error toast is handled by the mutation hook's onError
+      console.error('Delete failed:', err)
+    } finally {
+      setDeleteConfirmOpen(false)
+      setEventToDelete(null)
+      setOpen(false)
     }
   }
 
@@ -157,6 +179,8 @@ function Momentos() {
           <div className="flex flex-wrap items-start gap-4">
             {events.map((event) => {
               const isArchiving = archiveEvent.isPending && eventToArchive === event.id
+              const isDeleting = deleteEvent.isPending && eventToDelete === event.id
+              const cardLoading = isArchiving || isDeleting
 
               return (
                 <EventCard
@@ -164,7 +188,8 @@ function Momentos() {
                   event={event}
                   onArchive={() => handleArchive(event)}
                   onRestore={() => handleRestore(event)}
-                  isLoading={isArchiving}
+                  onDelete={() => handleDelete(event)}
+                  isLoading={cardLoading}
                   className="w-[16rem] min-h-[16rem] max-h-[32rem] transition-all duration-200 ease-in data-[removed]:scale-95 data-[removed]:opacity-0"
                   onClick={() => {
                     setSelectedEvent(event)
@@ -181,14 +206,26 @@ function Momentos() {
           onOpenChange={setOpen}
           onArchive={handleArchive}
           onRestore={handleRestore}
+          onDelete={handleDelete}
           onSave={handleSave}
           isLoading={createEvent.isPending || updateEvent.isPending}
           isOwner={selectedEvent?.ownerUserId === currentUserId}
         />
-        <ArchiveConfirmDialog
+        <ConfirmDialog
           open={archiveConfirmOpen}
           onOpenChange={setArchiveConfirmOpen}
           onConfirm={handleConfirmArchive}
+          title="Archive event?"
+          description="This event will be removed from your active list."
+          confirmText="Archive"
+        />
+        <ConfirmDialog
+          open={deleteConfirmOpen}
+          onOpenChange={setDeleteConfirmOpen}
+          onConfirm={handleConfirmDelete}
+          title="Delete event?"
+          description="This event will be permanently deleted."
+          confirmText="Delete"
         />
       </main>
       <Footer />

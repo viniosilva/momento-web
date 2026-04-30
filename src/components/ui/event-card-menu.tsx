@@ -1,4 +1,5 @@
-import { Archive, ArchiveRestore, MoreVertical } from "lucide-react"
+import { Archive, ArchiveRestore, MoreVertical, Trash2 } from "lucide-react"
+import type React from "react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -6,13 +7,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import type React from "react"
 
 interface EventCardMenuProps {
   isOwner: boolean
   isArchived: boolean
   onArchive: () => void
   onRestore: () => void
+  onDelete?: () => void
   isLoading?: boolean
 }
 
@@ -21,6 +22,7 @@ export function EventCardMenu({
   isArchived,
   onArchive,
   onRestore,
+  onDelete,
   isLoading,
 }: EventCardMenuProps) {
   if (!isOwner) {
@@ -54,6 +56,15 @@ export function EventCardMenu({
           <DropdownMenuItem onClick={onArchive} disabled={isLoading}>
             <Archive className="mr-2 h-4 w-4" />
             Archive
+          </DropdownMenuItem>
+        )}
+        {onDelete && (
+          <DropdownMenuItem
+            onClick={onDelete}
+            disabled={isLoading}
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>
