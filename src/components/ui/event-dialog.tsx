@@ -56,14 +56,9 @@ export const EventDialog = React.forwardRef<HTMLDivElement, EventDialogProps>(
       prevOpen.current = open
     }, [open, event])
 
-    const handleSave = () => {
-      setError(null)
-      onSave?.({ title: title.trim(), content: content.trim() })
-    }
-
     const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
       if (e.ctrlKey && e.key === "Enter") {
-        handleSave()
+        onOpenChange(false)
       }
     }
 
