@@ -1,6 +1,6 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { momentoApi } from '@/api/client'
-import type { PortsLoginRequest, PortsLogoutRequest, PortsRefreshRequest, PortsRegisterRequest } from '@/api/Api'
+import type { PortsLoginRequest, PortsLogoutRequest, PortsRefreshRequest, PortsRegisterRequest, PortsForgotPasswordRequest, PortsResetPasswordRequest } from '@/api/Api'
 
 export function useLogin() {
   return useMutation({
@@ -34,5 +34,34 @@ export function useRefreshToken() {
       const response = await momentoApi.api.authRefreshCreate({ refresh_token })
       return response.data
     },
+  })
+}
+
+export function useForgotPassword() {
+  return useMutation({
+    mutationFn: async (data: PortsForgotPasswordRequest) => {
+      const response = await momentoApi.api.authForgotPasswordCreate(data)
+      return response.data
+    },
+  })
+}
+
+export function useResetPassword() {
+  return useMutation({
+    mutationFn: async (data: PortsResetPasswordRequest) => {
+      const response = await momentoApi.api.authResetPasswordCreate(data)
+      return response.data
+    },
+  })
+}
+
+export function useValidateResetToken(token: string) {
+  return useQuery({
+    queryKey: ['validateResetToken', token],
+    queryFn: async () => {
+      const response = await momentoApi.api.authResetPasswordValidateList({ token })
+      return response.data
+    },
+    enabled: !!token,
   })
 }

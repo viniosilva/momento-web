@@ -44,7 +44,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             {children}
-            <Toaster position="bottom-right" />
+            <Toaster position="top-center" />
           </AuthProvider>
         </QueryClientProvider>
         <TanStackDevtools

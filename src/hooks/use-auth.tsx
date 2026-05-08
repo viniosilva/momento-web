@@ -23,17 +23,33 @@ const STORAGE_KEYS = {
   REFRESH_TOKEN: "momento_refresh_token",
 } as const
 
-const isClient = typeof window !== "undefined"
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AuthState>(() => ({
-    token: isClient ? localStorage.getItem(STORAGE_KEYS.TOKEN) : null,
-    refreshToken: isClient ? localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN) : null,
-    isAuthenticated: isClient ? !!localStorage.getItem(STORAGE_KEYS.TOKEN) : false,
-  }))
+  const [state, setState] = useState<AuthState>({
+    token: null,
+    refreshToken: null,
+    isAuthenticated: false,
+  })
+
+// Initialize state from localStorage on mount (client-side only)
+  useEffect(() => {
+    console.log('useEffect triggered, window defined:', typeof window !== 'undefined')
+    if (typeof window === "undefined") return
+
+    const token = localStorage.getItem(STORAGE_KEYS.TOKEN)
+    const refreshToken = localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN)
+    console.log('useEffect - token from localStorage:', token)
+
+    if (token) {
+      setState({
+        token,
+        refreshToken,
+        isAuthenticated: true,
+      })
+    }
+  }, [])
 
   const setTokens = useCallback((token: string, refreshToken: string) => {
-    if (isClient) {
+    if (typeof window !== "undefined") {
       localStorage.setItem(STORAGE_KEYS.TOKEN, token)
       localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refreshToken)
     }
@@ -64,7 +80,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logoutMutation = useLogout()
 
   const logout = useCallback(async () => {
-    const refreshToken = isClient ? localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN) : null
+    const refreshToken = typeof window !== "undefined"
+      ? localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN)
+      : null
     if (refreshToken) {
       try {
         await logoutMutation.mutateAsync({ refresh_token: refreshToken })
@@ -72,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // ignore logout errors
       }
     }
-    if (isClient) {
+    if (typeof window !== "undefined") {
       localStorage.removeItem(STORAGE_KEYS.TOKEN)
       localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN)
     }
@@ -84,7 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [logoutMutation])
 
   useEffect(() => {
-    if (!isClient) return
+    if (typeof window === "undefined") return
 
     const handleLogout = () => {
       setState({

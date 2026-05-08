@@ -1,25 +1,53 @@
+import { useState } from "react"
 import { Link, createFileRoute } from "@tanstack/react-router"
 import { useForm } from '@tanstack/react-form'
 import type { SubmitEvent } from "react"
 import { Button } from "@/components/ui/button"
 import { AuthLayout } from "@/components/ui/auth-layout"
 import { EmailInput } from "@/components/ui/email-input"
-import { signInSchema } from "@/schemas/sign-in.schema"
+import { forgotPasswordSchema } from "@/schemas/reset-password"
 import { useFormValidation } from "@/hooks/use-form-validation"
 import { submitForm } from "@/lib/utils"
-
+import { useForgotPassword } from "@/hooks/use-auth-query"
+import { toast } from "sonner"
 
 export const Route = createFileRoute("/recover-password")({ component: RecoverPassword })
 
 function RecoverPassword() {
+  const [isSuccess, setIsSuccess] = useState(false)
+  const forgotPasswordMutation = useForgotPassword()
+
   const form = useForm({
-    defaultValues: { email: '', password: '' },
+    defaultValues: { email: '' },
     onSubmit: async ({ value }) => {
-      console.log(value)
+      forgotPasswordMutation.mutate({ email: value.email }, {
+        onSuccess: () => {
+          setIsSuccess(true)
+        },
+        onError: (_err) => {
+          toast.error("Failed to send recovery email. Please try again.")
+        }
+      })
     },
   })
 
-  const validateField = useFormValidation(signInSchema)
+  const validateField = useFormValidation(forgotPasswordSchema)
+
+  if (isSuccess) {
+    return (
+      <AuthLayout subtitle="Recover your password">
+        <div className="mt-4 text-center">
+          <h3 className="text-lg font-semibold">Email sent!</h3>
+          <p className="mt-2 text-muted-foreground">
+            If the email exists, you will receive password recovery instructions shortly.
+          </p>
+          <Link to="/sign-in" className="mt-6 block text-chart-5 hover:underline">
+            Back to Sign in
+          </Link>
+        </div>
+      </AuthLayout>
+    )
+  }
 
   return (
     <AuthLayout subtitle="Recover your password">
@@ -36,9 +64,13 @@ function RecoverPassword() {
 
         <form.Subscribe
           selector={(state) => [state.canSubmit, state.isSubmitting]}
-          children={([canSubmit, isSubmitting]) => (
-            <Button type="submit" disabled={!canSubmit} className="mt-6 w-full font-semibold hover:bg-primary/80 cursor-pointer">
-              {isSubmitting ? '...' : 'Send recovery email'}
+          children={([canSubmit, _isSubmitting]) => (
+            <Button
+              type="submit"
+              disabled={!canSubmit || forgotPasswordMutation.isPending}
+              className="mt-6 w-full font-semibold hover:bg-primary/80 cursor-pointer"
+            >
+              {forgotPasswordMutation.isPending ? 'Sending...' : 'Send recovery email'}
             </Button>
           )}
         />

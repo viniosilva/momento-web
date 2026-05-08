@@ -13,6 +13,7 @@ import { signInSchema } from "@/schemas/sign-in.schema"
 import { useFormValidation } from "@/hooks/use-form-validation"
 import { submitForm } from "@/lib/utils"
 import { useAuth } from "@/hooks/use-auth"
+import { toast } from "sonner"
 
 export const Route = createFileRoute("/sign-in")({ component: SignIn })
 
@@ -27,6 +28,7 @@ function SignIn() {
         router.navigate({ to: '/momentos' })
       } catch (error) {
         console.error('Login failed:', error)
+        toast.error('Invalid email or password')
       }
     },
   })

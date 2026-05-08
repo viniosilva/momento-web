@@ -55,6 +55,11 @@ export interface PortsEventResponse {
   updated_at?: string;
 }
 
+export interface PortsForgotPasswordRequest {
+  /** @example "user@example.com" */
+  email?: string;
+}
+
 export interface PortsListEventsResponse {
   data?: PortsEventResponse[];
   pagination?: ListoptsPaginationResponse;
@@ -103,6 +108,13 @@ export interface PortsRegisterResponse {
   email?: string;
   /** @example "507f1f77bcf86cd799439011" */
   id?: string;
+}
+
+export interface PortsResetPasswordRequest {
+  /** @example "NewPass123!" */
+  password?: string;
+  /** @example "abc123..." */
+  token?: string;
 }
 
 export interface PortsUpdateEventRequest {
@@ -386,6 +398,27 @@ export class Api<
 > extends HttpClient<SecurityDataType> {
   api = {
     /**
+     * @description Sends a password reset email if the account exists
+     *
+     * @tags auth
+     * @name AuthForgotPasswordCreate
+     * @summary Request password reset
+     * @request POST:/api/auth/forgot-password
+     */
+    authForgotPasswordCreate: (
+      request: PortsForgotPasswordRequest,
+      params: RequestParams = {},
+    ) =>
+      this.request<Record<string, string>, NethttpErrorResponse>({
+        path: `/api/auth/forgot-password`,
+        method: "POST",
+        body: request,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
      * @description Authenticates a user and returns a JWT token and a refresh token
      *
      * @tags auth
@@ -460,6 +493,51 @@ export class Api<
         path: `/api/auth/register`,
         method: "POST",
         body: request,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Resets the user's password using a valid reset token
+     *
+     * @tags auth
+     * @name AuthResetPasswordCreate
+     * @summary Reset password with token
+     * @request POST:/api/auth/reset-password
+     */
+    authResetPasswordCreate: (
+      request: PortsResetPasswordRequest,
+      params: RequestParams = {},
+    ) =>
+      this.request<Record<string, string>, NethttpErrorResponse>({
+        path: `/api/auth/reset-password`,
+        method: "POST",
+        body: request,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Checks if a reset token is valid and not expired
+     *
+     * @tags auth
+     * @name AuthResetPasswordValidateList
+     * @summary Validate reset token
+     * @request GET:/api/auth/reset-password/validate
+     */
+    authResetPasswordValidateList: (
+      query: {
+        /** Reset token */
+        token: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<Record<string, boolean>, NethttpErrorResponse>({
+        path: `/api/auth/reset-password/validate`,
+        method: "GET",
+        query: query,
         type: ContentType.Json,
         format: "json",
         ...params,

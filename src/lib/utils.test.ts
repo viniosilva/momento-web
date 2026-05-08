@@ -26,7 +26,7 @@ describe('submitForm', () => {
     expect(mockForm.handleSubmit).toHaveBeenCalled()
   })
 
-  it('calls form.reset', () => {
+  it('does not call form.reset', () => {
     const mockForm = {
       handleSubmit: vi.fn(),
       reset: vi.fn(),
@@ -34,6 +34,6 @@ describe('submitForm', () => {
 
     submitForm({ preventDefault: vi.fn() } as unknown as SubmitEvent, mockForm)
 
-    expect(mockForm.reset).toHaveBeenCalled()
+    expect(mockForm.reset).not.toHaveBeenCalled()
   })
 })

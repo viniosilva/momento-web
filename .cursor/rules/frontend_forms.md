@@ -71,9 +71,9 @@ export function UserForm() {
               onChange={(e) => field.handleChange(e.target.value)}
               onBlur={field.handleBlur}
             />
-            {field.state.meta.errors.map((error) => (
-              <p key={error} className="text-destructive">
-                {error}
+            {field.state.meta.errors.map((err) => (
+              <p key={err} className="text-destructive">
+                {err}
               </p>
             ))}
           </div>
@@ -92,9 +92,9 @@ export function UserForm() {
               onChange={(e) => field.handleChange(e.target.value)}
               onBlur={field.handleBlur}
             />
-            {field.state.meta.errors.map((error) => (
-              <p key={error} className="text-destructive">
-                {error}
+            {field.state.meta.errors.map((err) => (
+              <p key={err} className="text-destructive">
+                {err}
               </p>
             ))}
           </div>
@@ -113,9 +113,9 @@ export function UserForm() {
               onBlur={field.handleBlur}
             />
             <span>{field.state.value.length}/500</span>
-            {field.state.meta.errors.map((error) => (
-              <p key={error} className="text-destructive">
-                {error}
+            {field.state.meta.errors.map((err) => (
+              <p key={err} className="text-destructive">
+                {err}
               </p>
             ))}
           </div>

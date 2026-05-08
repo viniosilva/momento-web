@@ -5,14 +5,15 @@ import type { AnyFieldApi } from '@tanstack/react-form'
 
 interface PasswordInputProps {
   field: AnyFieldApi
+  label?: string
 }
 
-export function PasswordInput({ field }: PasswordInputProps) {
+export function PasswordInput({ field, label }: PasswordInputProps) {
   const [showPassword, setShowPassword] = React.useState(false)
 
   return (
     <>
-      <label htmlFor={field.name}>Password</label>
+      <label htmlFor={field.name}>{label || "Password"}</label>
       <div className="relative">
         <input
           type={showPassword ? "text" : "password"}
