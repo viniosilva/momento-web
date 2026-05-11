@@ -1,21 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import Momentos from './momentos'
+import { screen, fireEvent, waitFor } from '@testing-library/react'
+import { renderWithFileRoutes } from '@/test/file-route-utils'
+import { Momentos } from './Momentos'
 import { useAuth } from '@/hooks/use-auth'
 import { useEventsList, useCreateEvent, useUpdateEvent, useArchiveEvent, useRestoreEvent, useDeleteEvent } from '@/hooks/use-events'
 import { useCurrentUserId } from '@/hooks/use-current-user'
 import { toast } from 'sonner'
 import React from 'react'
 
-// Mock lucide-react icons
 vi.mock('lucide-react', () => ({
   CalendarHeart: (props: any) => React.createElement('div', { ...props, 'data-testid': 'calendar-heart' }),
   Loader2: (props: any) => React.createElement('div', { ...props, 'data-testid': 'loader2' }),
 }))
 
-// Mock all hooks and components
 vi.mock('@/hooks/use-auth', () => ({
-  useAuth: vi.fn()
+  useAuth: vi.fn(),
+  AuthProvider: ({ children }: { children: React.ReactNode }) => children,
 }))
 
 vi.mock('@/hooks/use-events', () => ({
@@ -24,26 +24,25 @@ vi.mock('@/hooks/use-events', () => ({
   useUpdateEvent: vi.fn(),
   useArchiveEvent: vi.fn(),
   useRestoreEvent: vi.fn(),
-  useDeleteEvent: vi.fn()
+  useDeleteEvent: vi.fn(),
 }))
 
 vi.mock('@/hooks/use-current-user', () => ({
-  useCurrentUserId: vi.fn()
+  useCurrentUserId: vi.fn(),
 }))
 
 vi.mock('sonner', () => ({
-  toast: { error: vi.fn(), success: vi.fn() }
+  toast: { error: vi.fn(), success: vi.fn() },
 }))
 
 vi.mock('@/components/ui/header', () => ({
-  Header: () => React.createElement('div', { 'data-testid': 'header' }, 'Header')
+  Header: () => React.createElement('div', { 'data-testid': 'header' }, 'Header'),
 }))
 
 vi.mock('@/components/ui/footer', () => ({
-  Footer: () => React.createElement('div', { 'data-testid': 'footer' }, 'Footer')
+  Footer: () => React.createElement('div', { 'data-testid': 'footer' }, 'Footer'),
 }))
 
-// Variable to control EventDialog behavior
 let saveData = { title: 'Test', content: 'Content' }
 
 vi.mock('@/components/ui/event-dialog', () => ({
@@ -52,8 +51,8 @@ vi.mock('@/components/ui/event-dialog', () => ({
       React.createElement('button', { onClick: () => onSave?.(saveData) }, 'Save'),
       React.createElement('button', { onClick: () => onArchive?.() }, 'Archive'),
       React.createElement('button', { onClick: () => onRestore?.() }, 'Restore'),
-      React.createElement('button', { onClick: () => onDelete?.() }, 'Delete')
-    ) : null
+      React.createElement('button', { onClick: () => onDelete?.() }, 'Delete'),
+    ) : null,
 }))
 
 vi.mock('@/components/ui/event-card', () => ({
@@ -62,8 +61,8 @@ vi.mock('@/components/ui/event-card', () => ({
       React.createElement('span', null, event.title),
       React.createElement('button', { onClick: (e: any) => { e.stopPropagation(); onArchive?.() } }, 'Archive'),
       React.createElement('button', { onClick: (e: any) => { e.stopPropagation(); onRestore?.() } }, 'Restore'),
-      React.createElement('button', { onClick: (e: any) => { e.stopPropagation(); onDelete?.() } }, 'Delete')
-    )
+      React.createElement('button', { onClick: (e: any) => { e.stopPropagation(); onDelete?.() } }, 'Delete'),
+    ),
 }))
 
 vi.mock('@/components/ui/confirm-dialog', () => ({
@@ -71,8 +70,8 @@ vi.mock('@/components/ui/confirm-dialog', () => ({
     open ? React.createElement('div', { 'data-testid': 'confirm-dialog' },
       React.createElement('span', null, title),
       React.createElement('button', { onClick: onConfirm }, 'Confirm'),
-      React.createElement('button', { onClick: () => onOpenChange(false) }, 'Cancel')
-    ) : null
+      React.createElement('button', { onClick: () => onOpenChange(false) }, 'Cancel'),
+    ) : null,
 }))
 
 const mockEvents = [
@@ -120,7 +119,7 @@ describe('Momentos', () => {
   })
 
   it('renders header and footer', () => {
-    render(<Momentos />)
+    renderWithFileRoutes(<Momentos />)
     expect(screen.getByTestId('header')).toBeDefined()
     expect(screen.getByTestId('footer')).toBeDefined()
   })
@@ -128,7 +127,7 @@ describe('Momentos', () => {
   it('shows login prompt when not authenticated', () => {
     const authCtx = { isAuthenticated: false } as unknown as ReturnType<typeof useAuth>
     vi.mocked(useAuth).mockReturnValue(authCtx)
-    render(<Momentos />)
+    renderWithFileRoutes(<Momentos />)
     expect(screen.getByText('Please log in to view your momentos')).toBeDefined()
   })
 
@@ -138,7 +137,7 @@ describe('Momentos', () => {
       isLoading: true,
       error: null,
     } as any)
-    render(<Momentos />)
+    renderWithFileRoutes(<Momentos />)
     expect(screen.getByText('Loading momentos...')).toBeDefined()
   })
 
@@ -148,12 +147,12 @@ describe('Momentos', () => {
       isLoading: false,
       error: new Error('Failed to load'),
     } as any)
-    render(<Momentos />)
+    renderWithFileRoutes(<Momentos />)
     expect(screen.getByText('Failed to load')).toBeDefined()
   })
 
   it('shows empty state when no events', () => {
-    render(<Momentos />)
+    renderWithFileRoutes(<Momentos />)
     expect(screen.getByText('Events created will be displayed here')).toBeDefined()
   })
 
@@ -163,27 +162,27 @@ describe('Momentos', () => {
       isLoading: false,
       error: null,
     } as any)
-    render(<Momentos />)
+    renderWithFileRoutes(<Momentos />)
     expect(screen.getByTestId('event-card-123e4567-e89b-12d3-a456-426614174000')).toBeDefined()
     expect(screen.getByTestId('event-card-223e4567-e89b-12d3-a456-426614174001')).toBeDefined()
   })
 
   it('opens dialog on Enter key in input', () => {
-    render(<Momentos />)
+    renderWithFileRoutes(<Momentos />)
     const input = screen.getByPlaceholderText('Create an event...')
     fireEvent.keyDown(input, { key: 'Enter' })
     expect(screen.getByTestId('event-dialog')).toBeDefined()
   })
 
   it('opens dialog on input click', () => {
-    render(<Momentos />)
+    renderWithFileRoutes(<Momentos />)
     const input = screen.getByPlaceholderText('Create an event...')
     fireEvent.click(input)
     expect(screen.getByTestId('event-dialog')).toBeDefined()
   })
 
   it('creates new event', async () => {
-    render(<Momentos />)
+    renderWithFileRoutes(<Momentos />)
     const input = screen.getByPlaceholderText('Create an event...')
     fireEvent.click(input)
 
@@ -205,7 +204,7 @@ describe('Momentos', () => {
       error: null,
     } as any)
 
-    render(<Momentos />)
+    renderWithFileRoutes(<Momentos />)
     const eventCard = screen.getByTestId('event-card-123e4567-e89b-12d3-a456-426614174000')
     fireEvent.click(eventCard)
 
@@ -224,7 +223,7 @@ describe('Momentos', () => {
       error: null,
     } as any)
 
-    render(<Momentos />)
+    renderWithFileRoutes(<Momentos />)
     const archiveBtn = screen.getAllByText('Archive')[0]
     fireEvent.click(archiveBtn)
 
@@ -239,12 +238,10 @@ describe('Momentos', () => {
       error: null,
     } as any)
 
-    render(<Momentos />)
-    // First click the event card to set selectedEvent
+    renderWithFileRoutes(<Momentos />)
     const eventCard = screen.getByTestId('event-card-123e4567-e89b-12d3-a456-426614174000')
     fireEvent.click(eventCard)
 
-    // Then click Archive button
     const archiveBtn = screen.getAllByText('Archive')[0]
     fireEvent.click(archiveBtn)
 
@@ -263,7 +260,7 @@ describe('Momentos', () => {
       error: null,
     } as any)
 
-    render(<Momentos />)
+    renderWithFileRoutes(<Momentos />)
     const restoreBtn = screen.getAllByText('Restore')[0]
     fireEvent.click(restoreBtn)
 
@@ -279,7 +276,7 @@ describe('Momentos', () => {
       error: null,
     } as any)
 
-    render(<Momentos />)
+    renderWithFileRoutes(<Momentos />)
     const deleteBtn = screen.getAllByText('Delete')[0]
     fireEvent.click(deleteBtn)
 
@@ -294,7 +291,7 @@ describe('Momentos', () => {
       error: null,
     } as any)
 
-    render(<Momentos />)
+    renderWithFileRoutes(<Momentos />)
     const deleteBtn = screen.getAllByText('Delete')[0]
     fireEvent.click(deleteBtn)
 
@@ -307,10 +304,9 @@ describe('Momentos', () => {
   })
 
   it('handles validation error on save', async () => {
-    // Change saveData to invalid data (empty title)
     saveData = { title: '', content: '' }
 
-    render(<Momentos />)
+    renderWithFileRoutes(<Momentos />)
     const input = screen.getByPlaceholderText('Create an event...')
     fireEvent.click(input)
 
@@ -321,14 +317,13 @@ describe('Momentos', () => {
       expect(toast.error).toHaveBeenCalled()
     })
 
-    // Restore saveData
     saveData = { title: 'Test', content: 'Content' }
   })
 
   it('handles error on save event', async () => {
     mockCreateEvent.mutateAsync.mockRejectedValueOnce(new Error('Failed to save'))
 
-    render(<Momentos />)
+    renderWithFileRoutes(<Momentos />)
     const input = screen.getByPlaceholderText('Create an event...')
     fireEvent.click(input)
 
@@ -341,7 +336,6 @@ describe('Momentos', () => {
   })
 
   it('handles error on archive event', async () => {
-    // Setup: make mutateAsync reject
     mockArchiveEvent.mutateAsync.mockRejectedValueOnce(new Error('Archive failed'))
 
     vi.mocked(useEventsList).mockReturnValue({
@@ -350,13 +344,11 @@ describe('Momentos', () => {
       error: null,
     } as any)
 
-    render(<Momentos />)
+    renderWithFileRoutes(<Momentos />)
 
-    // First click the event card to set selectedEvent
     const eventCard = screen.getByTestId('event-card-123e4567-e89b-12d3-a456-426614174000')
     fireEvent.click(eventCard)
 
-    // Then click Archive button
     const archiveBtn = screen.getAllByText('Archive')[0]
     fireEvent.click(archiveBtn)
 
@@ -372,12 +364,12 @@ describe('Momentos', () => {
     mockRestoreEvent.mutateAsync.mockRejectedValueOnce(new Error('Restore failed'))
 
     vi.mocked(useEventsList).mockReturnValue({
-      data: { data: [mockEvents[1]] }, // Evento arquivado
+      data: { data: [mockEvents[1]] },
       isLoading: false,
       error: null,
     } as any)
 
-    render(<Momentos />)
+    renderWithFileRoutes(<Momentos />)
     const restoreBtn = screen.getAllByText('Restore')[0]
     fireEvent.click(restoreBtn)
 
@@ -395,7 +387,7 @@ describe('Momentos', () => {
       error: null,
     } as any)
 
-    render(<Momentos />)
+    renderWithFileRoutes(<Momentos />)
     const deleteBtn = screen.getAllByText('Delete')[0]
     fireEvent.click(deleteBtn)
 

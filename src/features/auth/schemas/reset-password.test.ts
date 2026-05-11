@@ -106,5 +106,3 @@ describe('forgotPasswordSchema', () => {
     expect(result.success).toBe(false)
   })
 })
-
-

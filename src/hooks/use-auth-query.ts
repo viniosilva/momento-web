@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { momentoApi } from '@/api/client'
-import type { PortsLoginRequest, PortsLogoutRequest, PortsRefreshRequest, PortsRegisterRequest, PortsForgotPasswordRequest, PortsResetPasswordRequest } from '@/api/Api'
+import type { PortsLoginRequest, PortsLogoutRequest, PortsRefreshRequest, PortsRegisterRequest, PortsForgotPasswordRequest, PortsResetPasswordRequest, PortsVerifyEmailRequest } from '@/api/Api'
 
 export function useLogin() {
   return useMutation({
@@ -15,6 +15,15 @@ export function useRegister() {
   return useMutation({
     mutationFn: async (data: PortsRegisterRequest) => {
       const response = await momentoApi.api.authRegisterCreate(data)
+      return response.data
+    },
+  })
+}
+
+export function useVerifyEmail() {
+  return useMutation({
+    mutationFn: async (data: PortsVerifyEmailRequest) => {
+      const response = await momentoApi.api.authVerifyEmailCreate(data)
       return response.data
     },
   })

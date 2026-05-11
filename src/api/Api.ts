@@ -124,6 +124,21 @@ export interface PortsUpdateEventRequest {
   title?: string;
 }
 
+export interface PortsValidateResetTokenResponse {
+  /** @example true */
+  valid?: boolean;
+}
+
+export interface PortsVerifyEmailRequest {
+  /** @example "abc123..." */
+  token?: string;
+}
+
+export interface PortsVerifyEmailResponse {
+  /** @example "Email verified successfully" */
+  message?: string;
+}
+
 export interface ResponseHealthResponse {
   /** @example "ok" */
   status?: DomainHealthStatusEnum;
@@ -534,10 +549,31 @@ export class Api<
       },
       params: RequestParams = {},
     ) =>
-      this.request<Record<string, boolean>, NethttpErrorResponse>({
+      this.request<PortsValidateResetTokenResponse, NethttpErrorResponse>({
         path: `/api/auth/reset-password/validate`,
         method: "GET",
         query: query,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Verifies a user's email address using a verification token
+     *
+     * @tags auth
+     * @name AuthVerifyEmailCreate
+     * @summary Verify email address
+     * @request POST:/api/auth/verify-email
+     */
+    authVerifyEmailCreate: (
+      request: PortsVerifyEmailRequest,
+      params: RequestParams = {},
+    ) =>
+      this.request<PortsVerifyEmailResponse, NethttpErrorResponse>({
+        path: `/api/auth/verify-email`,
+        method: "POST",
+        body: request,
         type: ContentType.Json,
         format: "json",
         ...params,

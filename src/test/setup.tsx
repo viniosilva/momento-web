@@ -9,11 +9,11 @@ vi.mock('@tanstack/react-router', async () => {
     Link: ({ children, to }: { children: ReactNode; to: string }) => (
       <a href={to}>{children}</a>
     ),
-    useRouter: () => ({ 
+    useRouter: vi.fn(() => ({ 
       navigate: vi.fn(),
       state: {},
       history: { push: vi.fn(), go: vi.fn() },
-    }),
+    })),
     useNavigate: () => vi.fn(),
     useSearch: vi.fn(() => ({ token: 'valid-token' })),
     useMatch: vi.fn(() => ({})),
@@ -42,6 +42,10 @@ vi.mock('@/hooks/use-auth-query', () => ({
     mutate: vi.fn(),
     isPending: false,
   })),
+  useVerifyEmail: vi.fn(() => ({
+    mutate: vi.fn(),
+    isPending: false,
+  })),
 }))
 
 // Conditionally mock use-auth based on global variable
@@ -51,14 +55,14 @@ vi.mock('@/hooks/use-auth', async () => {
     return vi.importActual('@/hooks/use-auth')
   }
   return {
-    useAuth: () => ({
+    useAuth: vi.fn(() => ({
       login: vi.fn(),
       register: vi.fn(),
       logout: vi.fn(),
       isAuthenticated: false,
       token: null,
       refreshToken: null,
-    }),
+    })),
     AuthProvider: ({ children }: { children: ReactNode }) => children,
   }
 })

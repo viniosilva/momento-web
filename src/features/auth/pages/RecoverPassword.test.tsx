@@ -1,7 +1,8 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import RecoverPassword from './recover-password'
-import { setupReactRouterMock, setupAuthMock, setupAuthQueryMock } from '@/test-utils/setup'
+import { screen, fireEvent, waitFor } from '@testing-library/react'
+import { renderWithFileRoutes } from '@/test/file-route-utils'
+import { RecoverPassword } from './RecoverPassword'
+import { setupReactRouterMock, setupAuthMock, setupAuthQueryMock } from '@/test/setup'
 import { useForgotPassword } from '@/hooks/use-auth-query'
 
 describe('RecoverPassword', () => {
@@ -13,7 +14,7 @@ describe('RecoverPassword', () => {
   })
 
   it('renders recover password page', () => {
-    render(<RecoverPassword />)
+    renderWithFileRoutes(<RecoverPassword />)
 
     expect(screen.getByText('Recover your password')).toBeDefined()
     expect(screen.getByRole('button', { name: /send recovery email/i })).toBeDefined()
@@ -28,7 +29,7 @@ describe('RecoverPassword', () => {
     } as unknown as ReturnType<typeof useForgotPassword>
     vi.mocked(useForgotPassword).mockReturnValue(mutationResult)
 
-    render(<RecoverPassword />)
+    renderWithFileRoutes(<RecoverPassword />)
 
     const emailInput = screen.getByLabelText(/email/i)
     const submitButton = screen.getByRole('button', { name: /send recovery email/i })
@@ -39,23 +40,23 @@ describe('RecoverPassword', () => {
     await waitFor(() => {
       expect(mockMutate).toHaveBeenCalledWith(
         { email: 'test@example.com' },
-        expect.any(Object)
+        expect.any(Object),
       )
     })
   })
 
   it('shows success message after submission', async () => {
-    const mockMutate = vi.fn((data, options) => {
+    const mockMutate = vi.fn((_data, options) => {
       if (options?.onSuccess) options.onSuccess()
     })
-    
+
     const mutationResult = {
       mutate: mockMutate,
       isPending: false,
     } as unknown as ReturnType<typeof useForgotPassword>
-      vi.mocked(useForgotPassword).mockReturnValue(mutationResult)
+    vi.mocked(useForgotPassword).mockReturnValue(mutationResult)
 
-    render(<RecoverPassword />)
+    renderWithFileRoutes(<RecoverPassword />)
 
     const emailInput = screen.getByLabelText(/email/i)
     const submitButton = screen.getByRole('button', { name: /send recovery email/i })
@@ -75,7 +76,7 @@ describe('RecoverPassword', () => {
     } as unknown as ReturnType<typeof useForgotPassword>
     vi.mocked(useForgotPassword).mockReturnValue(mutationResult)
 
-    render(<RecoverPassword />)
+    renderWithFileRoutes(<RecoverPassword />)
 
     const submitButton = screen.getByRole('button', { name: /sending.../i })
     expect(submitButton).toHaveProperty('disabled', true)
