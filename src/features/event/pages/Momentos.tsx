@@ -2,15 +2,14 @@ import { useState } from "react"
 import { CalendarHeart, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import type { Event } from "@/hooks/use-events"
-import { eventSchema } from "@/features/momentos/schemas/event.schema"
 import { useAuth } from "@/hooks/use-auth"
-import { useCurrentUserId } from "@/hooks/use-current-user"
 import { useArchiveEvent, useCreateEvent, useDeleteEvent, useEventsList, useRestoreEvent, useUpdateEvent } from "@/hooks/use-events"
-import { Footer } from "@/components/ui/footer"
-import { Header } from "@/components/ui/header"
-import { EventDialog } from "@/components/ui/event-dialog"
-import { EventCard } from "@/components/ui/event-card"
+import { Footer } from "@/components/layout/footer"
+import { Header } from "@/components/layout/header"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { EventCard } from "@/features/event/components/event-card"
+import { EventDialog } from "@/features/event/components/event-dialog"
+import { eventSchema } from "@/features/event/schemas/event.schema"
 
 const eventFormSchema = eventSchema.pick({ title: true, content: true })
 
@@ -31,12 +30,13 @@ export function Momentos() {
   const deleteEvent = useDeleteEvent()
 
   const events = eventsData?.data ?? []
-  const currentUserId = useCurrentUserId()
 
   const handleSave = async (data: { title: string; content: string }) => {
+    if (!data.title.trim() || !data.content.trim()) return
+
     const result = eventFormSchema.safeParse(data)
     if (!result.success) {
-      const errors = result.error.issues.map((issue) => issue.message).join(", ")
+      const errors = result.error.issues.map((issue: any) => issue.message).join(", ")
       toast.error(errors)
       return
     }
@@ -168,7 +168,7 @@ export function Momentos() {
             </span>
           </div>
         ) : (
-          <div className="flex flex-wrap items-start gap-4">
+          <div className="flex flex-wrap items-start justify-center gap-4">
             {events.map((event) => {
               const isArchiving = archiveEvent.isPending && eventToArchive === event.id
               const isDeleting = deleteEvent.isPending && eventToDelete === event.id
@@ -182,7 +182,7 @@ export function Momentos() {
                   onRestore={() => handleRestore(event)}
                   onDelete={() => handleDelete(event)}
                   isLoading={cardLoading}
-                  className="w-[16rem] min-h-[16rem] max-h-[32rem] transition-all duration-200 ease-in data-[removed]:scale-95 data-[removed]:opacity-0"
+                  className="w-[45%] min-w-[10rem] max-w-[16rem] min-h-[16rem] max-h-[32rem] transition-all duration-200 ease-in data-[removed]:scale-95 data-[removed]:opacity-0"
                   onClick={() => {
                     setSelectedEvent(event)
                     setOpen(true)
@@ -201,7 +201,6 @@ export function Momentos() {
           onDelete={handleDelete}
           onSave={handleSave}
           isLoading={createEvent.isPending || updateEvent.isPending}
-          isOwner={selectedEvent?.ownerUserId === currentUserId}
         />
         <ConfirmDialog
           open={archiveConfirmOpen}

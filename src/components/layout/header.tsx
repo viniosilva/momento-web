@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router"
-import { Button } from "./button";
+import { Button } from "../ui/button";
 import { SearchInput } from "./search-input";
 
 export function Header() {

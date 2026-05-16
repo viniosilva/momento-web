@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
-import { HeaderHome } from './header-home'
+import { HeaderHome } from '@/features/home/components/header-home'
 
 describe('HeaderHome', () => {
   it('renders logo and sign in button on desktop', () => {

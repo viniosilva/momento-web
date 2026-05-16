@@ -76,7 +76,7 @@ vi.mock('@tanstack/react-form', () => ({
     return {
       handleSubmit: vi.fn(),
       Field: ({ children }: any) =>
-        children({ state: { value: '' }, handleChange: vi.fn() }),
+        children({ state: { value: '', meta: { isValid: true, isTouched: false, errors: [], isValidating: false } }, handleChange: vi.fn() }),
       Subscribe: ({ children }: any) =>
         children([true, false]),
     }

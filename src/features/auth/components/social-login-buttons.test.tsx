@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { SocialLoginButtons } from './social-login-buttons'
+import { SocialLoginButtons } from '@/features/auth/components/social-login-buttons'
 
 describe('SocialLoginButtons', () => {
   it('renders Facebook and Google login buttons', () => {

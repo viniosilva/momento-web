@@ -1,13 +1,13 @@
 import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { HeaderHome } from "@/components/ui/header-home"
-import { Footer } from "@/components/ui/footer"
+import { HeaderHome } from "@/features/home/components/header-home"
+import { Footer } from "@/components/layout/footer"
 
 export function App() {
   return (
     <div className="flex flex-col min-h-screen bg-neutral-100">
       <HeaderHome />
-      <main className="flex-1 flex items-center justify-center max-w-md min-w-0 mx-auto flex-col gap-4 text-sm leading-loose">
+      <main className="flex-1 flex flex-col items-center justify-center gap-4 max-w-md mx-auto px-4 text-sm leading-loose">
         <span className="bg-chart-1 py-2 px-4 text-center">Fast, simple, easy to organize and share your moments</span>
 
         <h1 className="text-center flex flex-col text-4xl font-bold">

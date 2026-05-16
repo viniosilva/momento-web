@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "@tanstack/react-router"
-import { Button } from "./button";
+import { Button } from "../../../components/ui/button";
 
 export function HeaderHome() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);

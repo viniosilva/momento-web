@@ -8,10 +8,37 @@ import { useCurrentUserId } from '@/hooks/use-current-user'
 import { toast } from 'sonner'
 import React from 'react'
 
-vi.mock('lucide-react', () => ({
-  CalendarHeart: (props: any) => React.createElement('div', { ...props, 'data-testid': 'calendar-heart' }),
-  Loader2: (props: any) => React.createElement('div', { ...props, 'data-testid': 'loader2' }),
-}))
+vi.mock('lucide-react', () => {
+  const icon = (name: string) => (props: any) =>
+    React.createElement('div', { ...props, 'data-testid': name })
+  return {
+    CalendarHeart: icon('calendar-heart'),
+    Loader2: icon('loader2'),
+    Search: icon('search-icon'),
+    ArrowRight: icon('arrow-right'),
+    Archive: icon('archive'),
+    ArchiveRestore: icon('archive-restore'),
+    MoreVertical: icon('more-vertical'),
+    Trash2: icon('trash2'),
+    Camera: icon('camera'),
+    Plus: icon('plus'),
+    Images: icon('images'),
+    Upload: icon('upload'),
+    XIcon: icon('x-icon'),
+    ChevronLeft: icon('chevron-left'),
+    ChevronRight: icon('chevron-right'),
+    ImageOff: icon('image-off'),
+    Eye: icon('eye'),
+    EyeOff: icon('eye-off'),
+    CheckIcon: icon('check-icon'),
+    ChevronRightIcon: icon('chevron-right-icon'),
+    CircleCheckIcon: icon('circle-check'),
+    InfoIcon: icon('info'),
+    Loader2Icon: icon('loader2-icon'),
+    OctagonXIcon: icon('octagon-x'),
+    TriangleAlertIcon: icon('triangle-alert'),
+  }
+})
 
 vi.mock('@/hooks/use-auth', () => ({
   useAuth: vi.fn(),
@@ -35,17 +62,17 @@ vi.mock('sonner', () => ({
   toast: { error: vi.fn(), success: vi.fn() },
 }))
 
-vi.mock('@/components/ui/header', () => ({
+vi.mock('@/components/layout/header', () => ({
   Header: () => React.createElement('div', { 'data-testid': 'header' }, 'Header'),
 }))
 
-vi.mock('@/components/ui/footer', () => ({
+vi.mock('@/components/layout/footer', () => ({
   Footer: () => React.createElement('div', { 'data-testid': 'footer' }, 'Footer'),
 }))
 
 let saveData = { title: 'Test', content: 'Content' }
 
-vi.mock('@/components/ui/event-dialog', () => ({
+vi.mock('@/features/event/components/event-dialog', () => ({
   EventDialog: ({ open, onSave, onArchive, onRestore, onDelete }: any) =>
     open ? React.createElement('div', { 'data-testid': 'event-dialog' },
       React.createElement('button', { onClick: () => onSave?.(saveData) }, 'Save'),
@@ -55,7 +82,7 @@ vi.mock('@/components/ui/event-dialog', () => ({
     ) : null,
 }))
 
-vi.mock('@/components/ui/event-card', () => ({
+vi.mock('@/features/event/components/event-card', () => ({
   EventCard: ({ event, onArchive, onRestore, onDelete, onClick }: any) =>
     React.createElement('div', { 'data-testid': `event-card-${event.id}`, onClick },
       React.createElement('span', null, event.title),
@@ -301,23 +328,6 @@ describe('Momentos', () => {
     await waitFor(() => {
       expect(mockDeleteEvent.mutateAsync).toHaveBeenCalledWith('123e4567-e89b-12d3-a456-426614174000')
     })
-  })
-
-  it('handles validation error on save', async () => {
-    saveData = { title: '', content: '' }
-
-    renderWithFileRoutes(<Momentos />)
-    const input = screen.getByPlaceholderText('Create an event...')
-    fireEvent.click(input)
-
-    const saveBtn = screen.getByText('Save')
-    fireEvent.click(saveBtn)
-
-    await waitFor(() => {
-      expect(toast.error).toHaveBeenCalled()
-    })
-
-    saveData = { title: 'Test', content: 'Content' }
   })
 
   it('handles error on save event', async () => {

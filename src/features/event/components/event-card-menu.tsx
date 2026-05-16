@@ -6,7 +6,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 interface EventCardMenuProps {
   isOwner: boolean
@@ -34,15 +35,10 @@ export function EventCardMenu({
       <DropdownMenuTrigger onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
         e.stopPropagation()
       }}>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          className="hover:bg-transparent hover:text-chart-3"
-          disabled={isLoading}
-        >
+        <div className={cn(buttonVariants({ variant: "ghost", size: "icon-sm" }), "hover:text-chart-3 rounded-full")}>
           <MoreVertical className="h-4 w-4" />
           <span className="sr-only">Open menu</span>
-        </Button>
+        </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" onClick={(e: React.MouseEvent<HTMLDivElement>) => {
         e.stopPropagation()
@@ -68,6 +64,6 @@ export function EventCardMenu({
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>
-    </DropdownMenu>
+    </DropdownMenu >
   )
 }

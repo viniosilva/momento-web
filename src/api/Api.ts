@@ -31,6 +31,11 @@ export interface NethttpErrorResponse {
   message?: string;
 }
 
+export interface PortsConfirmImageRequest {
+  /** @example "events/abc123/a1b2c3d4.jpg" */
+  object_key?: string;
+}
+
 export interface PortsCreateEventRequest {
   /** @example "My important event content" */
   content?: string;
@@ -58,6 +63,20 @@ export interface PortsEventResponse {
 export interface PortsForgotPasswordRequest {
   /** @example "user@example.com" */
   email?: string;
+}
+
+export interface PortsGetUploadURLResponse {
+  /** @example "events/abc123/a1b2c3d4.jpg" */
+  object_key?: string;
+  /** @example "https://s3.amazonaws.com/..." */
+  upload_url?: string;
+}
+
+export interface PortsImageResponse {
+  /** @example "https://s3.amazonaws.com/..." */
+  download_url?: string;
+  /** @example "events/abc123/a1b2c3d4.jpg" */
+  path?: string;
 }
 
 export interface PortsListEventsResponse {
@@ -651,6 +670,98 @@ export class Api<
       this.request<PortsEventResponse, NethttpErrorResponse>({
         path: `/api/events/${id}`,
         method: "GET",
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Adds an image reference to the event after upload
+     *
+     * @tags events
+     * @name EventsImagesCreate
+     * @summary Confirm image upload
+     * @request POST:/api/events/{id}/images
+     * @secure
+     */
+    eventsImagesCreate: (
+      id: string,
+      request: PortsConfirmImageRequest,
+      params: RequestParams = {},
+    ) =>
+      this.request<PortsImageResponse, NethttpErrorResponse>({
+        path: `/api/events/${id}/images`,
+        method: "POST",
+        body: request,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Removes an image reference from an event
+     *
+     * @tags events
+     * @name EventsImagesDelete
+     * @summary Delete event image
+     * @request DELETE:/api/events/{id}/images/{path}
+     * @secure
+     */
+    eventsImagesDelete: (
+      id: string,
+      path: string,
+      params: RequestParams = {},
+    ) =>
+      this.request<void, NethttpErrorResponse>({
+        path: `/api/events/${id}/images/${path}`,
+        method: "DELETE",
+        secure: true,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * @description Lists all images associated with an event
+     *
+     * @tags events
+     * @name EventsImagesList
+     * @summary List event images
+     * @request GET:/api/events/{id}/images
+     * @secure
+     */
+    eventsImagesList: (id: string, params: RequestParams = {}) =>
+      this.request<PortsImageResponse[], NethttpErrorResponse>({
+        path: `/api/events/${id}/images`,
+        method: "GET",
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Returns a presigned S3 URL for uploading an event image
+     *
+     * @tags events
+     * @name EventsImagesUploadUrlList
+     * @summary Get presigned upload URL
+     * @request GET:/api/events/{id}/images/upload-url
+     * @secure
+     */
+    eventsImagesUploadUrlList: (
+      id: string,
+      query: {
+        /** Content type */
+        content_type: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<PortsGetUploadURLResponse, NethttpErrorResponse>({
+        path: `/api/events/${id}/images/upload-url`,
+        method: "GET",
+        query: query,
         secure: true,
         type: ContentType.Json,
         format: "json",

@@ -2,8 +2,8 @@ import * as React from "react"
 import { Loader2 } from "lucide-react"
 import type { Event } from "@/hooks/use-events"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { EventCardMenu } from "@/components/ui/event-card-menu"
 import { useCurrentUserId } from "@/hooks/use-current-user"
+import { EventCardMenu } from "./event-card-menu"
 
 
 interface EventCardProps extends React.ComponentProps<typeof Card> {
